@@ -32,7 +32,7 @@ export function Footer() {
           {/* Company Info */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-3 mb-4">
-              <img src={logo} alt="СКБ УРАЛ56" className="h-10 w-auto" />
+              <img src={logo} alt="СКБ УРАЛ56" className="h-16 w-auto" />
             </Link>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
               Строительство быстровозводимых зданий, модульных конструкций, складских помещений и сельскохозяйственных объектов. Допуск СРО и ОПО.
