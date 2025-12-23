@@ -8,7 +8,7 @@ import { PaginationControls } from "@/components/PaginationControls";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Search } from "lucide-react";
+import { X, Search, Download } from "lucide-react";
 
 interface Project {
   slug: string;
@@ -50,6 +50,7 @@ const Projects = () => {
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
+  const [hoveredProject, setHoveredProject] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -119,12 +120,41 @@ const Projects = () => {
     setSearchQuery("");
   };
 
+  const exportToCSV = () => {
+    const headers = ["Название", "Регион", "Сегмент", "Площадь (м²)", "Срок (нед.)", "Год"];
+    const rows = filteredProjects.map(p => [
+      p.title,
+      p.region,
+      p.segment,
+      p.area.toString(),
+      p.term_weeks.toString(),
+      p.year.toString()
+    ]);
+
+    const csvContent = [
+      headers.join(";"),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(";"))
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `projects_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 py-12">
         <div className="container">
-          <h1 className="text-3xl md:text-4xl font-bold font-display mb-8">Реализованные проекты</h1>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold font-display">Реализованные проекты</h1>
+            <Button variant="outline" onClick={exportToCSV} disabled={filteredProjects.length === 0}>
+              <Download className="h-4 w-4 mr-2" />
+              Экспорт CSV
+            </Button>
+          </div>
           
           {/* Search and Filters */}
           <div className="space-y-4 mb-8">
@@ -215,24 +245,46 @@ const Projects = () => {
                 <Link 
                   key={project.slug} 
                   to={`/projects/${project.slug}`} 
-                  className="card-hover bg-card border border-border rounded-xl overflow-hidden"
+                  className="group relative bg-card border border-border rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/30"
+                  onMouseEnter={() => setHoveredProject(project.slug)}
+                  onMouseLeave={() => setHoveredProject(null)}
                 >
-                  <div className="aspect-video bg-secondary">
+                  <div className="aspect-video bg-secondary overflow-hidden">
                     {project.photos && project.photos[0] && (
                       <img 
                         src={project.photos[0]} 
                         alt={project.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                     )}
                   </div>
                   <div className="p-4">
                     <span className="text-xs text-accent font-medium">{project.segment}</span>
-                    <h2 className="font-semibold mt-1 mb-2">{project.title}</h2>
+                    <h2 className="font-semibold mt-1 mb-2 group-hover:text-primary transition-colors">{project.title}</h2>
                     <p className="text-sm text-muted-foreground">
                       {project.area} м² • {project.region} • {project.term_weeks} нед.
                     </p>
                   </div>
+                  
+                  {/* Enlarged preview on hover */}
+                  {hoveredProject === project.slug && project.photos && project.photos[0] && (
+                    <div className="hidden lg:block absolute left-full top-0 ml-4 z-50 w-80 bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-scale-in pointer-events-none">
+                      <img 
+                        src={project.photos[0]} 
+                        alt={project.title}
+                        className="w-full aspect-video object-cover"
+                      />
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-2">{project.title}</h3>
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p><span className="font-medium text-foreground">Регион:</span> {project.region}</p>
+                          <p><span className="font-medium text-foreground">Площадь:</span> {project.area} м²</p>
+                          <p><span className="font-medium text-foreground">Срок:</span> {project.term_weeks} недель</p>
+                          <p><span className="font-medium text-foreground">Год:</span> {project.year}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </Link>
               ))
             )}
