@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      articles: {
+        Row: {
+          author: string
+          body: string
+          category: Database["public"]["Enums"]["article_category"]
+          cover: string
+          created_at: string
+          id: string
+          is_published: boolean | null
+          lead: string
+          published_at: string
+          read_time: number
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          body: string
+          category: Database["public"]["Enums"]["article_category"]
+          cover?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          lead: string
+          published_at?: string
+          read_time?: number
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          category?: Database["public"]["Enums"]["article_category"]
+          cover?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          lead?: string
+          published_at?: string
+          read_time?: number
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           area_m2: number | null
@@ -59,6 +110,159 @@ export type Database = {
           region?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          applications: string[] | null
+          created_at: string
+          excerpt: string
+          faq: Json | null
+          gallery: string[] | null
+          icon: string
+          id: string
+          is_published: boolean | null
+          price_from: number
+          price_to: number
+          related_projects: string[] | null
+          slug: string
+          specs_fire_resistance: string | null
+          specs_heights: string | null
+          specs_insulation: string | null
+          specs_snow_load: string | null
+          specs_spans: string | null
+          steps: Json | null
+          title: string
+          updated_at: string
+          usp: string[] | null
+        }
+        Insert: {
+          applications?: string[] | null
+          created_at?: string
+          excerpt: string
+          faq?: Json | null
+          gallery?: string[] | null
+          icon: string
+          id?: string
+          is_published?: boolean | null
+          price_from: number
+          price_to: number
+          related_projects?: string[] | null
+          slug: string
+          specs_fire_resistance?: string | null
+          specs_heights?: string | null
+          specs_insulation?: string | null
+          specs_snow_load?: string | null
+          specs_spans?: string | null
+          steps?: Json | null
+          title: string
+          updated_at?: string
+          usp?: string[] | null
+        }
+        Update: {
+          applications?: string[] | null
+          created_at?: string
+          excerpt?: string
+          faq?: Json | null
+          gallery?: string[] | null
+          icon?: string
+          id?: string
+          is_published?: boolean | null
+          price_from?: number
+          price_to?: number
+          related_projects?: string[] | null
+          slug?: string
+          specs_fire_resistance?: string | null
+          specs_heights?: string | null
+          specs_insulation?: string | null
+          specs_snow_load?: string | null
+          specs_spans?: string | null
+          steps?: Json | null
+          title?: string
+          updated_at?: string
+          usp?: string[] | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          area: number
+          budget_max: number
+          budget_min: number
+          created_at: string
+          height: number
+          id: string
+          is_published: boolean | null
+          photos: string[] | null
+          problem: string
+          product_type: string
+          region: string
+          result: string
+          segment: Database["public"]["Enums"]["project_segment"]
+          slug: string
+          solution: string
+          span: number
+          tags: string[] | null
+          term_weeks: number
+          testimonial_author: string | null
+          testimonial_position: string | null
+          testimonial_text: string | null
+          title: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          area: number
+          budget_max: number
+          budget_min: number
+          created_at?: string
+          height: number
+          id?: string
+          is_published?: boolean | null
+          photos?: string[] | null
+          problem: string
+          product_type: string
+          region: string
+          result: string
+          segment: Database["public"]["Enums"]["project_segment"]
+          slug: string
+          solution: string
+          span: number
+          tags?: string[] | null
+          term_weeks: number
+          testimonial_author?: string | null
+          testimonial_position?: string | null
+          testimonial_text?: string | null
+          title: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          area?: number
+          budget_max?: number
+          budget_min?: number
+          created_at?: string
+          height?: number
+          id?: string
+          is_published?: boolean | null
+          photos?: string[] | null
+          problem?: string
+          product_type?: string
+          region?: string
+          result?: string
+          segment?: Database["public"]["Enums"]["project_segment"]
+          slug?: string
+          solution?: string
+          span?: number
+          tags?: string[] | null
+          term_weeks?: number
+          testimonial_author?: string | null
+          testimonial_position?: string | null
+          testimonial_text?: string | null
+          title?: string
+          updated_at?: string
+          year?: number
         }
         Relationships: []
       }
@@ -119,7 +323,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "editor" | "user"
+      article_category: "новости" | "технологии" | "закупки"
       lead_status: "new" | "in_progress" | "closed"
+      project_segment:
+        | "промышленность"
+        | "логистика"
+        | "агро"
+        | "B2G"
+        | "торговля"
+        | "авто"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -248,7 +460,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "editor", "user"],
+      article_category: ["новости", "технологии", "закупки"],
       lead_status: ["new", "in_progress", "closed"],
+      project_segment: [
+        "промышленность",
+        "логистика",
+        "агро",
+        "B2G",
+        "торговля",
+        "авто",
+      ],
     },
   },
 } as const
