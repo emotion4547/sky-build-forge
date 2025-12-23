@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   FileText, RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, Search, Calendar
 } from "lucide-react";
+import { ImageUpload } from "./ImageUpload";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -381,6 +382,15 @@ export const AdminArticles = () => {
                 <Input 
                   value={currentArticle.tags?.join(", ") || ""} 
                   onChange={(e) => setCurrentArticle({...currentArticle, tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean)})}
+                />
+              </div>
+              <div>
+                <Label>Обложка</Label>
+                <ImageUpload
+                  value={currentArticle.cover && currentArticle.cover !== "/placeholder.svg" ? [currentArticle.cover] : []}
+                  onChange={(urls) => setCurrentArticle({...currentArticle, cover: urls[0] || "/placeholder.svg"})}
+                  folder="articles"
+                  single
                 />
               </div>
               <Button onClick={saveArticle} className="w-full">Сохранить</Button>

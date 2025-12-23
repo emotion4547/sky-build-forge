@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Package, RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, Search
 } from "lucide-react";
+import { ImageUpload } from "./ImageUpload";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +42,7 @@ interface Product {
   specs_snow_load: string | null;
   specs_fire_resistance: string | null;
   applications: string[];
+  gallery: string[] | null;
   is_published: boolean;
   created_at: string;
 }
@@ -59,6 +61,7 @@ const emptyProduct: Omit<Product, 'id' | 'created_at'> = {
   specs_snow_load: "",
   specs_fire_resistance: "",
   applications: [],
+  gallery: [],
   is_published: true
 };
 
@@ -118,6 +121,7 @@ export const AdminProducts = () => {
       specs_snow_load: currentProduct.specs_snow_load || null,
       specs_fire_resistance: currentProduct.specs_fire_resistance || null,
       applications: currentProduct.applications || [],
+      gallery: currentProduct.gallery || [],
       is_published: currentProduct.is_published
     };
 
@@ -365,6 +369,15 @@ export const AdminProducts = () => {
                 <Input 
                   value={currentProduct.applications?.join(", ") || ""} 
                   onChange={(e) => setCurrentProduct({...currentProduct, applications: e.target.value.split(",").map(t => t.trim()).filter(Boolean)})}
+                />
+              </div>
+              <div>
+                <Label>Галерея</Label>
+                <ImageUpload
+                  value={currentProduct.gallery || []}
+                  onChange={(urls) => setCurrentProduct({...currentProduct, gallery: urls})}
+                  folder="products"
+                  maxImages={10}
                 />
               </div>
               <Button onClick={saveProduct} className="w-full">Сохранить</Button>

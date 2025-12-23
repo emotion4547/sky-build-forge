@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  FolderOpen, RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, Search, X
+  FolderOpen, RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, Search
 } from "lucide-react";
+import { ImageUpload } from "./ImageUpload";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -447,6 +448,15 @@ export const AdminProjects = () => {
                 <Input 
                   value={currentProject.tags?.join(", ") || ""} 
                   onChange={(e) => setCurrentProject({...currentProject, tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean)})}
+                />
+              </div>
+              <div>
+                <Label>Фотографии проекта</Label>
+                <ImageUpload
+                  value={currentProject.photos || []}
+                  onChange={(urls) => setCurrentProject({...currentProject, photos: urls})}
+                  folder="projects"
+                  maxImages={10}
                 />
               </div>
               <Button onClick={saveProject} className="w-full">Сохранить</Button>
