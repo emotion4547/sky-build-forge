@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { Warehouse, Factory, Building, Store, Car, Wheat, Heart, Building2, ArrowRight } from "lucide-react";
+import { Warehouse, Factory, Building, Store, Car, Wheat, Heart, Building2, ArrowRight, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationControls } from "@/components/PaginationControls";
+import { Input } from "@/components/ui/input";
 
 const iconMap: Record<string, any> = {
   Warehouse, Factory, Building, Store, Car, Wheat, Heart, Building2
@@ -26,6 +27,7 @@ const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -44,8 +46,18 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
-  const paginatedProducts = products.slice(
+  const filteredProducts = useMemo(() => {
+    return products.filter(product =>
+      product.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [products, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -59,6 +71,16 @@ const Products = () => {
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl">
             Быстровозводимые здания для любых задач: от складов до медицинских объектов
           </p>
+
+          <div className="relative max-w-md mb-8">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по названию..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (

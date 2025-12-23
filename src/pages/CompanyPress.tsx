@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationControls } from "@/components/PaginationControls";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface Article {
   slug: string;
@@ -22,6 +24,7 @@ const CompanyPress = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -40,8 +43,18 @@ const CompanyPress = () => {
     fetchArticles();
   }, []);
 
-  const totalPages = Math.ceil(articles.length / ITEMS_PER_PAGE);
-  const paginatedArticles = articles.slice(
+  const filteredArticles = useMemo(() => {
+    return articles.filter(article =>
+      article.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [articles, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
+  const paginatedArticles = filteredArticles.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -60,6 +73,17 @@ const CompanyPress = () => {
       <main className="flex-1 py-12">
         <div className="container">
           <h1 className="text-3xl md:text-4xl font-bold font-display mb-8">Пресс-центр</h1>
+          
+          <div className="relative max-w-md mb-8">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по названию..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
