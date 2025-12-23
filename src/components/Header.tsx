@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Calculator, Phone, Menu, X, ChevronDown } from "lucide-react";
+import { Calculator, Phone, Menu, X, ChevronDown, Search } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -93,6 +93,11 @@ export function Header() {
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
+          <Button variant="ghost" size="icon" asChild>
+            <Link to="/search" aria-label="Поиск">
+              <Search className="h-4 w-4" />
+            </Link>
+          </Button>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/calculators">
               <Calculator className="mr-1.5 h-4 w-4" />
@@ -156,6 +161,12 @@ export function Header() {
               )
             ))}
             <div className="flex flex-col gap-2 pt-4 border-t border-border mt-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/search" onClick={() => setMobileMenuOpen(false)}>
+                  <Search className="mr-1.5 h-4 w-4" />
+                  Поиск
+                </Link>
+              </Button>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/calculators" onClick={() => setMobileMenuOpen(false)}>
                   <Calculator className="mr-1.5 h-4 w-4" />
