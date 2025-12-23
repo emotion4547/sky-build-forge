@@ -65,6 +65,113 @@ export type Database = {
         }
         Relationships: []
       }
+      calculator_configs: {
+        Row: {
+          base_price_max: number
+          base_price_min: number
+          building_type: string
+          created_at: string
+          duration_max_weeks: number
+          duration_min_weeks: number
+          id: string
+          is_published: boolean | null
+          notes: string | null
+          slug: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          base_price_max?: number
+          base_price_min?: number
+          building_type: string
+          created_at?: string
+          duration_max_weeks?: number
+          duration_min_weeks?: number
+          id?: string
+          is_published?: boolean | null
+          notes?: string | null
+          slug: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          base_price_max?: number
+          base_price_min?: number
+          building_type?: string
+          created_at?: string
+          duration_max_weeks?: number
+          duration_min_weeks?: number
+          id?: string
+          is_published?: boolean | null
+          notes?: string | null
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      calculator_options: {
+        Row: {
+          add_price_max: number
+          add_price_min: number
+          config_id: string
+          created_at: string
+          id: string
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          add_price_max?: number
+          add_price_min?: number
+          config_id: string
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          add_price_max?: number
+          add_price_min?: number
+          config_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calculator_options_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "calculator_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calculator_regions: {
+        Row: {
+          coefficient: number
+          created_at: string
+          id: string
+          region: string
+          sort_order: number | null
+        }
+        Insert: {
+          coefficient?: number
+          created_at?: string
+          id?: string
+          region: string
+          sort_order?: number | null
+        }
+        Update: {
+          coefficient?: number
+          created_at?: string
+          id?: string
+          region?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           area_m2: number | null
