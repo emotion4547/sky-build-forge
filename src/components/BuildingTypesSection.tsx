@@ -113,9 +113,9 @@ export function BuildingTypesSection() {
                   <img 
                     src={type.image} 
                     alt={type.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-all duration-500 blur-[2px] group-hover:blur-0 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-60" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20 transition-opacity duration-300 group-hover:opacity-60 opacity-90" />
                 </div>
                 
                 {/* Content overlay */}
