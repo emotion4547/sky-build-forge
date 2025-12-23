@@ -7,56 +7,56 @@ const buildingTypes = [
     title: "Склады",
     description: "Логистические комплексы, распределительные центры",
     price: "От 32 000 ₽/м²",
-    href: "/products/sklady",
-    color: "from-blue-500/10 to-blue-600/5",
+    href: "/products/sklad",
+    image: "/images/products/sklad.jpg",
   },
   {
     icon: Factory,
     title: "Производственные цеха",
     description: "Промышленные объекты любой сложности",
     price: "От 35 000 ₽/м²",
-    href: "/products/proizvodstvennye-tsexa",
-    color: "from-orange-500/10 to-orange-600/5",
+    href: "/products/tsekh",
+    image: "/images/products/tsekh.jpg",
   },
   {
     icon: Building,
     title: "Ангары",
     description: "Холодные и утеплённые ангары",
     price: "От 26 000 ₽/м²",
-    href: "/products/angary",
-    color: "from-emerald-500/10 to-emerald-600/5",
+    href: "/products/angar",
+    image: "/images/products/angar.jpg",
   },
   {
     icon: Store,
     title: "Торговые павильоны",
     description: "Магазины, ТЦ, выставочные залы",
     price: "От 38 000 ₽/м²",
-    href: "/products/torgovye-pavilony",
-    color: "from-purple-500/10 to-purple-600/5",
+    href: "/products/pavilon",
+    image: "/images/products/pavilon.jpg",
   },
   {
     icon: Car,
     title: "СТО и автомойки",
     description: "Автосервисы, паркинги, мойки",
     price: "От 34 000 ₽/м²",
-    href: "/products/sto-avtomoyki",
-    color: "from-red-500/10 to-red-600/5",
+    href: "/products/sto",
+    image: "/images/products/sto.jpg",
   },
   {
     icon: Wheat,
     title: "Агро-ангары",
     description: "Зернохранилища, фермы, теплицы",
     price: "От 24 000 ₽/м²",
-    href: "/products/agro-angary",
-    color: "from-green-500/10 to-green-600/5",
+    href: "/products/agro",
+    image: "/images/products/agro.jpg",
   },
   {
     icon: Heart,
     title: "ФАП и медпункты",
     description: "Модульные медицинские объекты",
     price: "От 40 000 ₽/м²",
-    href: "/products/fap-medpunkty",
-    color: "from-pink-500/10 to-pink-600/5",
+    href: "/products/fap",
+    image: "/images/products/fap.jpg",
   },
 ];
 
@@ -81,18 +81,28 @@ export function BuildingTypesSection() {
             <Link
               key={type.title}
               to={type.href}
-              className="group relative bg-card rounded-2xl p-6 border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1"
+              className="group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              {/* Gradient background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${type.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+              {/* Cover Image */}
+              <div className="aspect-[4/3] overflow-hidden bg-secondary">
+                <img 
+                  src={type.image} 
+                  alt={type.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-60" />
+              </div>
               
-              <div className="relative z-10">
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <type.icon className="h-7 w-7 text-primary" />
+              {/* Content overlay */}
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center justify-center shrink-0">
+                    <type.icon className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  <h3 className="font-semibold text-foreground">{type.title}</h3>
                 </div>
-                <h3 className="font-semibold text-lg text-foreground mb-2">{type.title}</h3>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{type.description}</p>
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-1">{type.description}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-primary">{type.price}</span>
                   <span className="flex items-center text-sm text-muted-foreground group-hover:text-primary transition-colors">
