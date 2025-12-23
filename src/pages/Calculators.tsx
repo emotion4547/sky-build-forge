@@ -8,14 +8,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { calculatorConfigs, regionModifiers, calculateCost, CalculationResult } from "@/data/calculator";
 import { Calculator, Send } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Calculators = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [buildingType, setBuildingType] = useState("");
   const [area, setArea] = useState("");
   const [region, setRegion] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [result, setResult] = useState<CalculationResult | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ name: "", phone: "", email: "" });
 
   const config = calculatorConfigs.find(c => c.slug === buildingType);
   const regionCoef = regionModifiers.find(r => r.region === region)?.coefficient || 1;
@@ -28,6 +35,32 @@ const Calculators = () => {
 
   const toggleOption = (option: string) => {
     setSelectedOptions(prev => prev.includes(option) ? prev.filter(o => o !== option) : [...prev, option]);
+  };
+
+  const handleSubmitLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.from("leads").insert({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email || null,
+        building_type: config?.buildingType || null,
+        area_m2: parseInt(area) || null,
+        region: region || null,
+        source: "calculator"
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Заявка отправлена", description: "Мы подготовим точное КП и свяжемся с вами" });
+      navigate("/thank-you");
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось отправить заявку", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -96,7 +129,46 @@ const Calculators = () => {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">* Расчёт является предварительным и не является публичной офертой</p>
-                <Button asChild className="w-full"><Link to="/contacts"><Send className="mr-2 h-4 w-4" />Получить точное КП</Link></Button>
+                
+                {!showForm ? (
+                  <Button onClick={() => setShowForm(true)} className="w-full">
+                    <Send className="mr-2 h-4 w-4" />Получить точное КП
+                  </Button>
+                ) : (
+                  <form onSubmit={handleSubmitLead} className="space-y-4 mt-4 pt-4 border-t border-border">
+                    <div>
+                      <Label>Имя</Label>
+                      <Input 
+                        placeholder="Ваше имя" 
+                        required 
+                        value={formData.name}
+                        onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Телефон</Label>
+                      <Input 
+                        type="tel" 
+                        placeholder="+7 (___) ___-__-__" 
+                        required 
+                        value={formData.phone}
+                        onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input 
+                        type="email" 
+                        placeholder="email@example.com" 
+                        value={formData.email}
+                        onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      <Send className="mr-2 h-4 w-4" />{loading ? "Отправка..." : "Отправить заявку"}
+                    </Button>
+                  </form>
+                )}
               </div>
             )}
           </div>
