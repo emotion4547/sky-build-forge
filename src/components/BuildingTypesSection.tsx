@@ -124,12 +124,12 @@ export function BuildingTypesSection() {
                     <div className="w-10 h-10 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center justify-center shrink-0">
                       <IconComponent className="h-5 w-5 text-primary-foreground" />
                     </div>
-                    <h3 className="font-semibold text-foreground">{type.title}</h3>
+                    <h3 className="font-semibold text-foreground transition-colors duration-300 group-hover:text-white">{type.title}</h3>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-1">{type.description}</p>
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-1 transition-colors duration-300 group-hover:text-white/90">{type.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-primary">{type.price}</span>
-                    <span className="flex items-center text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                    <span className="text-sm font-bold text-primary transition-colors duration-300 group-hover:text-white">{type.price}</span>
+                    <span className="flex items-center text-sm text-muted-foreground group-hover:text-white transition-colors">
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </span>
                   </div>
