@@ -4,8 +4,9 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Calculator, Phone, ChevronRight } from "lucide-react";
+import { Calculator, Phone, ChevronRight, ZoomIn } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageLightbox } from "@/components/ImageLightbox";
 
 interface Product {
   slug: string;
@@ -34,6 +35,8 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProjects, setRelatedProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,6 +67,11 @@ const ProductDetail = () => {
 
     if (slug) fetchData();
   }, [slug]);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   if (loading) {
     return (
@@ -146,16 +154,57 @@ const ProductDetail = () => {
                 </Button>
               </div>
             </div>
-            <div className="aspect-video bg-secondary rounded-xl overflow-hidden">
-              {product.gallery && product.gallery[0] && (
-                <img 
-                  src={product.gallery[0]} 
-                  alt={product.title}
-                  className="w-full h-full object-cover"
-                />
+            
+            {/* Gallery */}
+            <div className="space-y-2">
+              <button 
+                onClick={() => openLightbox(0)}
+                className="relative w-full aspect-video bg-secondary rounded-xl overflow-hidden group cursor-pointer"
+              >
+                {product.gallery && product.gallery[0] && (
+                  <img 
+                    src={product.gallery[0]} 
+                    alt={product.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                )}
+                <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition-colors flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-3">
+                    <ZoomIn className="h-6 w-6" />
+                  </div>
+                </div>
+              </button>
+              
+              {product.gallery && product.gallery.length > 1 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {product.gallery.slice(1, 5).map((photo, i) => (
+                    <button 
+                      key={i} 
+                      onClick={() => openLightbox(i + 1)}
+                      className="relative aspect-video rounded-lg overflow-hidden bg-secondary group cursor-pointer"
+                    >
+                      <img src={photo} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-background/0 group-hover:bg-background/30 transition-colors" />
+                      {i === 3 && product.gallery && product.gallery.length > 5 && (
+                        <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                          <span className="text-lg font-semibold">+{product.gallery.length - 5}</span>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>
+
+          {product.gallery && product.gallery.length > 0 && (
+            <ImageLightbox
+              images={product.gallery}
+              initialIndex={lightboxIndex}
+              isOpen={lightboxOpen}
+              onClose={() => setLightboxOpen(false)}
+            />
+          )}
 
           <section className="mb-16">
             <h2 className="text-2xl font-bold font-display mb-6">Технические характеристики</h2>
