@@ -8,20 +8,41 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contacts = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    message: ""
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    
+    try {
+      const { error } = await supabase.from("leads").insert({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email || null,
+        message: formData.message || null,
+        source: "contacts"
+      });
+
+      if (error) throw error;
+
       toast({ title: "Заявка отправлена", description: "Мы свяжемся с вами в ближайшее время" });
       navigate("/thank-you");
-    }, 1000);
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось отправить заявку", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,10 +73,43 @@ const Contacts = () => {
             <div className="bg-card border border-border rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-6">Оставить заявку</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div><Label>Имя</Label><Input placeholder="Ваше имя" required /></div>
-                <div><Label>Телефон</Label><Input type="tel" placeholder="+7 (___) ___-__-__" required /></div>
-                <div><Label>Email</Label><Input type="email" placeholder="email@example.com" /></div>
-                <div><Label>Сообщение</Label><Textarea placeholder="Опишите ваш проект" rows={4} /></div>
+                <div>
+                  <Label>Имя</Label>
+                  <Input 
+                    placeholder="Ваше имя" 
+                    required 
+                    value={formData.name}
+                    onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label>Телефон</Label>
+                  <Input 
+                    type="tel" 
+                    placeholder="+7 (___) ___-__-__" 
+                    required 
+                    value={formData.phone}
+                    onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input 
+                    type="email" 
+                    placeholder="email@example.com" 
+                    value={formData.email}
+                    onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label>Сообщение</Label>
+                  <Textarea 
+                    placeholder="Опишите ваш проект" 
+                    rows={4} 
+                    value={formData.message}
+                    onChange={e => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                  />
+                </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   <Send className="mr-2 h-4 w-4" />{loading ? "Отправка..." : "Отправить заявку"}
                 </Button>
