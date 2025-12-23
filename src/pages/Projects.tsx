@@ -7,7 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationControls } from "@/components/PaginationControls";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { X, Search } from "lucide-react";
 
 interface Project {
   slug: string;
@@ -16,6 +17,7 @@ interface Project {
   segment: string;
   area: number;
   term_weeks: number;
+  year: number;
   photos: string[] | null;
 }
 
@@ -31,18 +33,29 @@ const SEGMENTS = [
   { value: "авто", label: "Авто" },
 ];
 
+const SORT_OPTIONS = [
+  { value: "date_desc", label: "По дате (новые)" },
+  { value: "date_asc", label: "По дате (старые)" },
+  { value: "area_desc", label: "По площади (убыв.)" },
+  { value: "area_asc", label: "По площади (возр.)" },
+  { value: "term_desc", label: "По сроку (убыв.)" },
+  { value: "term_asc", label: "По сроку (возр.)" },
+];
+
 const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedSegment, setSelectedSegment] = useState("all");
   const [selectedRegion, setSelectedRegion] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("date_desc");
 
   useEffect(() => {
     const fetchProjects = async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("slug, title, region, segment, area, term_weeks, photos")
+        .select("slug, title, region, segment, area, term_weeks, year, photos")
         .eq("is_published", true)
         .order("created_at", { ascending: false });
 
@@ -61,14 +74,30 @@ const Projects = () => {
     return [{ value: "all", label: "Все регионы" }, ...uniqueRegions.map(r => ({ value: r, label: r }))];
   }, [projects]);
 
-  // Filter projects
+  // Filter and sort projects
   const filteredProjects = useMemo(() => {
-    return projects.filter(project => {
+    let result = projects.filter(project => {
       const matchesSegment = selectedSegment === "all" || project.segment === selectedSegment;
       const matchesRegion = selectedRegion === "all" || project.region === selectedRegion;
-      return matchesSegment && matchesRegion;
+      const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSegment && matchesRegion && matchesSearch;
     });
-  }, [projects, selectedSegment, selectedRegion]);
+
+    // Sort
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "date_asc": return a.year - b.year;
+        case "date_desc": return b.year - a.year;
+        case "area_asc": return a.area - b.area;
+        case "area_desc": return b.area - a.area;
+        case "term_asc": return a.term_weeks - b.term_weeks;
+        case "term_desc": return b.term_weeks - a.term_weeks;
+        default: return 0;
+      }
+    });
+
+    return result;
+  }, [projects, selectedSegment, selectedRegion, searchQuery, sortBy]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE);
@@ -80,13 +109,14 @@ const Projects = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedSegment, selectedRegion]);
+  }, [selectedSegment, selectedRegion, searchQuery, sortBy]);
 
-  const hasActiveFilters = selectedSegment !== "all" || selectedRegion !== "all";
+  const hasActiveFilters = selectedSegment !== "all" || selectedRegion !== "all" || searchQuery !== "";
 
   const clearFilters = () => {
     setSelectedSegment("all");
     setSelectedRegion("all");
+    setSearchQuery("");
   };
 
   return (
@@ -96,40 +126,65 @@ const Projects = () => {
         <div className="container">
           <h1 className="text-3xl md:text-4xl font-bold font-display mb-8">Реализованные проекты</h1>
           
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <Select value={selectedSegment} onValueChange={setSelectedSegment}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Сегмент" />
-              </SelectTrigger>
-              <SelectContent>
-                {SEGMENTS.map(segment => (
-                  <SelectItem key={segment.value} value={segment.value}>
-                    {segment.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Search and Filters */}
+          <div className="space-y-4 mb-8">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Поиск по названию..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-4">
+              <Select value={selectedSegment} onValueChange={setSelectedSegment}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Сегмент" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SEGMENTS.map(segment => (
+                    <SelectItem key={segment.value} value={segment.value}>
+                      {segment.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Регион" />
-              </SelectTrigger>
-              <SelectContent>
-                {regions.map(region => (
-                  <SelectItem key={region.value} value={region.value}>
-                    {region.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Регион" />
+                </SelectTrigger>
+                <SelectContent>
+                  {regions.map(region => (
+                    <SelectItem key={region.value} value={region.value}>
+                      {region.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {hasActiveFilters && (
-              <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground">
-                <X className="h-4 w-4 mr-2" />
-                Сбросить фильтры
-              </Button>
-            )}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Сортировка" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {hasActiveFilters && (
+                <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground">
+                  <X className="h-4 w-4 mr-2" />
+                  Сбросить
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Results count */}
