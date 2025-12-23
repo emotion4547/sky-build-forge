@@ -69,14 +69,16 @@ export function AdminSiteSettings() {
   const benefitsSettings = settings.find(s => s.key === "benefits");
   const stagesSettings = settings.find(s => s.key === "work_stages");
   const ctaSettings = settings.find(s => s.key === "cta");
+  const buildingTypesSettings = settings.find(s => s.key === "building_types");
 
   return (
     <Tabs defaultValue="hero" className="space-y-6">
-      <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+      <TabsList className="grid grid-cols-6 w-full max-w-3xl">
         <TabsTrigger value="hero">Hero</TabsTrigger>
         <TabsTrigger value="stats">Статистика</TabsTrigger>
         <TabsTrigger value="benefits">Преимущества</TabsTrigger>
         <TabsTrigger value="stages">Этапы</TabsTrigger>
+        <TabsTrigger value="buildings">Здания</TabsTrigger>
         <TabsTrigger value="cta">CTA</TabsTrigger>
       </TabsList>
 
@@ -113,6 +115,15 @@ export function AdminSiteSettings() {
           data={stagesSettings?.value || []} 
           onSave={(value) => updateSetting("work_stages", value)}
           saving={saving === "work_stages"}
+        />
+      </TabsContent>
+
+      {/* Building Types Settings */}
+      <TabsContent value="buildings">
+        <BuildingTypesEditor 
+          data={buildingTypesSettings?.value || []} 
+          onSave={(value) => updateSetting("building_types", value)}
+          saving={saving === "building_types"}
         />
       </TabsContent>
 
@@ -339,6 +350,85 @@ function StagesEditor({ data, onSave, saving }: { data: any[]; onSave: (v: any) 
           {saving ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           Сохранить
         </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Building Types Editor
+function BuildingTypesEditor({ data, onSave, saving }: { data: any[]; onSave: (v: any) => void; saving: boolean }) {
+  const [items, setItems] = useState(data);
+
+  useEffect(() => { setItems(data); }, [data]);
+
+  const updateItem = (index: number, field: string, value: string) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setItems(newItems);
+  };
+
+  const addItem = () => {
+    setItems([...items, { icon: "Warehouse", title: "", description: "", price: "", href: "", image: "" }]);
+  };
+
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Типы зданий</CardTitle>
+        <CardDescription>Карточки с типами зданий на главной странице</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {items.map((item, index) => (
+          <div key={index} className="p-4 border rounded-lg space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Тип здания {index + 1}</span>
+              <Button variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <Label>Иконка (Warehouse, Factory, Building, Store, Car, Wheat, Heart)</Label>
+                <Input value={item.icon || ""} onChange={e => updateItem(index, "icon", e.target.value)} />
+              </div>
+              <div>
+                <Label>Заголовок</Label>
+                <Input value={item.title || ""} onChange={e => updateItem(index, "title", e.target.value)} />
+              </div>
+              <div>
+                <Label>Цена</Label>
+                <Input value={item.price || ""} onChange={e => updateItem(index, "price", e.target.value)} placeholder="От 32 000 ₽/м²" />
+              </div>
+            </div>
+            <div>
+              <Label>Описание</Label>
+              <Input value={item.description || ""} onChange={e => updateItem(index, "description", e.target.value)} />
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>Ссылка (href)</Label>
+                <Input value={item.href || ""} onChange={e => updateItem(index, "href", e.target.value)} placeholder="/products/sklad" />
+              </div>
+              <div>
+                <Label>Изображение (URL)</Label>
+                <Input value={item.image || ""} onChange={e => updateItem(index, "image", e.target.value)} placeholder="/images/products/sklad.jpg" />
+              </div>
+            </div>
+          </div>
+        ))}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={addItem}>
+            <Plus className="mr-2 h-4 w-4" /> Добавить
+          </Button>
+          <Button onClick={() => onSave(items)} disabled={saving}>
+            {saving ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            Сохранить
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
