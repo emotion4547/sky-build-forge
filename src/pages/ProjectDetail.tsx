@@ -4,8 +4,9 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Calculator, ChevronRight, Quote } from "lucide-react";
+import { Calculator, ChevronRight, Quote, ZoomIn } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageLightbox } from "@/components/ImageLightbox";
 
 interface Project {
   slug: string;
@@ -29,6 +30,8 @@ const ProjectDetail = () => {
   const { slug } = useParams();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -47,6 +50,11 @@ const ProjectDetail = () => {
 
     if (slug) fetchProject();
   }, [slug]);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   if (loading) {
     return (
@@ -98,23 +106,50 @@ const ProjectDetail = () => {
 
           {project.photos && project.photos.length > 0 && (
             <div className="mb-8">
-              <div className="aspect-video rounded-xl overflow-hidden bg-secondary">
+              <button 
+                onClick={() => openLightbox(0)}
+                className="relative w-full aspect-video rounded-xl overflow-hidden bg-secondary group cursor-pointer"
+              >
                 <img 
                   src={project.photos[0]} 
                   alt={project.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-              </div>
+                <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition-colors flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-3">
+                    <ZoomIn className="h-6 w-6" />
+                  </div>
+                </div>
+              </button>
               {project.photos.length > 1 && (
                 <div className="grid grid-cols-4 gap-2 mt-2">
                   {project.photos.slice(1, 5).map((photo, i) => (
-                    <div key={i} className="aspect-video rounded-lg overflow-hidden bg-secondary">
-                      <img src={photo} alt="" className="w-full h-full object-cover" />
-                    </div>
+                    <button 
+                      key={i} 
+                      onClick={() => openLightbox(i + 1)}
+                      className="relative aspect-video rounded-lg overflow-hidden bg-secondary group cursor-pointer"
+                    >
+                      <img src={photo} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-background/0 group-hover:bg-background/30 transition-colors" />
+                      {i === 3 && project.photos && project.photos.length > 5 && (
+                        <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                          <span className="text-lg font-semibold">+{project.photos.length - 5}</span>
+                        </div>
+                      )}
+                    </button>
                   ))}
                 </div>
               )}
             </div>
+          )}
+
+          {project.photos && project.photos.length > 0 && (
+            <ImageLightbox
+              images={project.photos}
+              initialIndex={lightboxIndex}
+              isOpen={lightboxOpen}
+              onClose={() => setLightboxOpen(false)}
+            />
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
