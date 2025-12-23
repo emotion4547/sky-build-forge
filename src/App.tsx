@@ -21,6 +21,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiesPolicy from "./pages/CookiesPolicy";
 import SearchPage from "./pages/SearchPage";
 import ThankYou from "./pages/ThankYou";
+import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +69,10 @@ const App = () => (
           
           {/* Thank you */}
           <Route path="/thank-you" element={<ThankYou />} />
+          
+          {/* Auth & Admin */}
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/admin" element={<Admin />} />
           
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
