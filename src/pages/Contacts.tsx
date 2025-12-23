@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Phone, Mail, Clock, Send, User } from "lucide-react";
+import { YandexMap } from "@/components/YandexMap";
+
+const OFFICE_COORDS = { lat: 51.869617, lng: 55.131406 };
 
 const departments = [
   { role: "Директор", name: "Орекешев Аскар Музабекович", phone: "+7 (932) 536-91-29" },
@@ -109,7 +112,14 @@ const Contacts = () => {
                 </div>
               </div>
 
-              <div className="bg-secondary rounded-xl aspect-video" />
+              {/* Яндекс-карта */}
+              <div className="rounded-xl overflow-hidden border border-border aspect-video">
+                <YandexMap 
+                  lat={OFFICE_COORDS.lat} 
+                  lng={OFFICE_COORDS.lng} 
+                  markerTitle="СКБ УРАЛ56"
+                />
+              </div>
             </div>
 
             <div className="bg-card border border-border rounded-xl p-6">
