@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { 
   LogOut, FileText, Home, RefreshCw, Users, Mail, BarChart3, 
-  Menu, X, ChevronLeft, ChevronRight, FolderOpen, Package, Newspaper, Settings
+  Menu, X, ChevronLeft, ChevronRight, FolderOpen, Package, Newspaper, Settings, Calculator
 } from "lucide-react";
 import { User, Session } from "@supabase/supabase-js";
 import logo from "@/assets/logo.png";
@@ -17,15 +17,17 @@ import { AdminProjects } from "@/components/admin/AdminProjects";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminArticles } from "@/components/admin/AdminArticles";
 import { AdminSiteSettings } from "@/components/admin/AdminSiteSettings";
+import { AdminCalculators } from "@/components/admin/AdminCalculators";
 import { cn } from "@/lib/utils";
 
-type AdminSection = "leads" | "users" | "subscribers" | "analytics" | "projects" | "products" | "articles" | "settings";
+type AdminSection = "leads" | "users" | "subscribers" | "analytics" | "projects" | "products" | "articles" | "settings" | "calculators";
 
 const sections = [
   { id: "leads" as AdminSection, label: "Заявки", icon: FileText },
   { id: "projects" as AdminSection, label: "Проекты", icon: FolderOpen },
   { id: "products" as AdminSection, label: "Продукты", icon: Package },
   { id: "articles" as AdminSection, label: "Статьи", icon: Newspaper },
+  { id: "calculators" as AdminSection, label: "Калькуляторы", icon: Calculator },
   { id: "settings" as AdminSection, label: "Контент сайта", icon: Settings },
   { id: "users" as AdminSection, label: "Пользователи", icon: Users },
   { id: "subscribers" as AdminSection, label: "Подписчики", icon: Mail },
@@ -109,6 +111,8 @@ const Admin = () => {
         return <AdminProducts />;
       case "articles":
         return <AdminArticles />;
+      case "calculators":
+        return <AdminCalculators />;
       case "settings":
         return <AdminSiteSettings />;
       case "users":
