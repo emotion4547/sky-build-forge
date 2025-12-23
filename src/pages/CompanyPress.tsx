@@ -6,7 +6,9 @@ import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationControls } from "@/components/PaginationControls";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Search, X } from "lucide-react";
 
 interface Article {
   slug: string;
@@ -20,11 +22,19 @@ interface Article {
 
 const ITEMS_PER_PAGE = 9;
 
+const CATEGORIES = [
+  { value: "all", label: "Все категории" },
+  { value: "новости", label: "Новости" },
+  { value: "технологии", label: "Технологии" },
+  { value: "закупки", label: "Закупки" },
+];
+
 const CompanyPress = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -44,14 +54,16 @@ const CompanyPress = () => {
   }, []);
 
   const filteredArticles = useMemo(() => {
-    return articles.filter(article =>
-      article.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [articles, searchQuery]);
+    return articles.filter(article => {
+      const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === "all" || article.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [articles, searchQuery, selectedCategory]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory]);
 
   const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
   const paginatedArticles = filteredArticles.slice(
@@ -67,6 +79,13 @@ const CompanyPress = () => {
     });
   };
 
+  const hasActiveFilters = searchQuery !== "" || selectedCategory !== "all";
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("all");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -74,15 +93,45 @@ const CompanyPress = () => {
         <div className="container">
           <h1 className="text-3xl md:text-4xl font-bold font-display mb-8">Пресс-центр</h1>
           
-          <div className="relative max-w-md mb-8">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Поиск по названию..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4 mb-8">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Поиск по названию..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-4">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Категория" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map(category => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {hasActiveFilters && (
+                <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground">
+                  <X className="h-4 w-4 mr-2" />
+                  Сбросить
+                </Button>
+              )}
+            </div>
           </div>
+
+          {!loading && (
+            <p className="text-muted-foreground mb-6">
+              Найдено статей: {filteredArticles.length}
+            </p>
+          )}
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (
