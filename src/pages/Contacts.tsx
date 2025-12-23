@@ -6,9 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { MapPin, Phone, Mail, Clock, Send, User } from "lucide-react";
+
+const departments = [
+  { role: "Директор", name: "Орекешев Аскар Музабекович", phone: "+7 (932) 536-91-29" },
+  { role: "Главный инженер", name: "Белушкин Юрий Алексеевич", phone: "+7 (922) 547-19-49" },
+  { role: "Начальник ПТО", name: "Зайцев Дмитрий Александрович", phone: "+7 (903) 366-44-95" },
+  { role: "Главный бухгалтер", name: "Тамарова Александра Владимировна", phone: "+7 (922) 536-18-77" },
+  { role: "Технический директор", name: "Грачиков Юрий Юрьевич", phone: "+7 (903) 395-12-70" },
+];
 
 const Contacts = () => {
   const { toast } = useToast();
@@ -54,6 +62,7 @@ const Contacts = () => {
           
           <div className="grid lg:grid-cols-2 gap-12">
             <div>
+              {/* Основные контакты */}
               <div className="space-y-6 mb-8">
                 {[
                   { icon: MapPin, title: "Адрес", text: "460019, Оренбургская область, г. Оренбург, мкр. Посёлок Кушкуль, ул. Просвещения, д. 19/4" },
@@ -74,6 +83,32 @@ const Contacts = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Отделы и сотрудники */}
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Контакты отделов
+                </h2>
+                <div className="space-y-3">
+                  {departments.map(dept => (
+                    <div key={dept.name} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors">
+                      <div>
+                        <p className="font-medium">{dept.name}</p>
+                        <p className="text-sm text-muted-foreground">{dept.role}</p>
+                      </div>
+                      <a 
+                        href={`tel:${dept.phone.replace(/\D/g, '')}`} 
+                        className="flex items-center gap-2 text-sm text-primary hover:underline shrink-0"
+                      >
+                        <Phone className="h-4 w-4" />
+                        {dept.phone}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="bg-secondary rounded-xl aspect-video" />
             </div>
 
