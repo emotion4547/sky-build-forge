@@ -119,7 +119,7 @@ export function BuildingTypesSection() {
                 </div>
                 
                 {/* Content overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-5">
+                <div className="absolute bottom-0 left-0 right-0 p-5 transition-all duration-300 group-hover:bg-black/70 group-hover:backdrop-blur-sm rounded-b-2xl">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center justify-center shrink-0">
                       <IconComponent className="h-5 w-5 text-primary-foreground" />
