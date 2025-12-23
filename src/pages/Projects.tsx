@@ -1,9 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PaginationControls } from "@/components/PaginationControls";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface Project {
   slug: string;
@@ -15,9 +19,24 @@ interface Project {
   photos: string[] | null;
 }
 
+const ITEMS_PER_PAGE = 9;
+
+const SEGMENTS = [
+  { value: "all", label: "Все сегменты" },
+  { value: "промышленность", label: "Промышленность" },
+  { value: "логистика", label: "Логистика" },
+  { value: "агро", label: "Агро" },
+  { value: "B2G", label: "B2G" },
+  { value: "торговля", label: "Торговля" },
+  { value: "авто", label: "Авто" },
+];
+
 const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedSegment, setSelectedSegment] = useState("all");
+  const [selectedRegion, setSelectedRegion] = useState("all");
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -36,12 +55,90 @@ const Projects = () => {
     fetchProjects();
   }, []);
 
+  // Get unique regions for filter
+  const regions = useMemo(() => {
+    const uniqueRegions = [...new Set(projects.map(p => p.region))].sort();
+    return [{ value: "all", label: "Все регионы" }, ...uniqueRegions.map(r => ({ value: r, label: r }))];
+  }, [projects]);
+
+  // Filter projects
+  const filteredProjects = useMemo(() => {
+    return projects.filter(project => {
+      const matchesSegment = selectedSegment === "all" || project.segment === selectedSegment;
+      const matchesRegion = selectedRegion === "all" || project.region === selectedRegion;
+      return matchesSegment && matchesRegion;
+    });
+  }, [projects, selectedSegment, selectedRegion]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE);
+  const paginatedProjects = filteredProjects.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedSegment, selectedRegion]);
+
+  const hasActiveFilters = selectedSegment !== "all" || selectedRegion !== "all";
+
+  const clearFilters = () => {
+    setSelectedSegment("all");
+    setSelectedRegion("all");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 py-12">
         <div className="container">
           <h1 className="text-3xl md:text-4xl font-bold font-display mb-8">Реализованные проекты</h1>
+          
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 mb-8">
+            <Select value={selectedSegment} onValueChange={setSelectedSegment}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Сегмент" />
+              </SelectTrigger>
+              <SelectContent>
+                {SEGMENTS.map(segment => (
+                  <SelectItem key={segment.value} value={segment.value}>
+                    {segment.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Регион" />
+              </SelectTrigger>
+              <SelectContent>
+                {regions.map(region => (
+                  <SelectItem key={region.value} value={region.value}>
+                    {region.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && (
+              <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground">
+                <X className="h-4 w-4 mr-2" />
+                Сбросить фильтры
+              </Button>
+            )}
+          </div>
+
+          {/* Results count */}
+          {!loading && (
+            <p className="text-muted-foreground mb-6">
+              Найдено проектов: {filteredProjects.length}
+            </p>
+          )}
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
@@ -54,8 +151,12 @@ const Projects = () => {
                   </div>
                 </div>
               ))
+            ) : paginatedProjects.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">Проекты не найдены</p>
+              </div>
             ) : (
-              projects.map(project => (
+              paginatedProjects.map(project => (
                 <Link 
                   key={project.slug} 
                   to={`/projects/${project.slug}`} 
@@ -81,6 +182,12 @@ const Projects = () => {
               ))
             )}
           </div>
+
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </main>
       <Footer />
