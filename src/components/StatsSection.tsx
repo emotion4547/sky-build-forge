@@ -1,33 +1,24 @@
 import { Building2, MapPin, Calendar, Ruler } from "lucide-react";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
-const stats = [
-  {
-    icon: Building2,
-    value: "150+",
-    label: "Реализованных проектов",
-    suffix: ""
-  },
-  {
-    icon: Ruler,
-    value: "500 000",
-    label: "м² построенных объектов",
-    suffix: "+"
-  },
-  {
-    icon: Calendar,
-    value: "12",
-    label: "Лет опыта на рынке",
-    suffix: ""
-  },
-  {
-    icon: MapPin,
-    value: "6",
-    label: "Регионов ПФО",
-    suffix: ""
-  },
+interface StatItem {
+  value: string;
+  label: string;
+  suffix?: string;
+}
+
+const defaultStats: StatItem[] = [
+  { value: "150+", label: "Реализованных проектов" },
+  { value: "500 000", label: "м² построенных объектов", suffix: "+" },
+  { value: "12", label: "Лет опыта на рынке" },
+  { value: "6", label: "Регионов ПФО" },
 ];
 
+const iconMap = [Building2, Ruler, Calendar, MapPin];
+
 export function StatsSection() {
+  const { data: stats } = useSiteSettings<StatItem[]>("stats", defaultStats);
+
   return (
     <section id="stats" className="py-16 md:py-20 lg:py-24 bg-primary text-primary-foreground relative overflow-hidden">
       {/* Background pattern */}
@@ -39,23 +30,26 @@ export function StatsSection() {
 
       <div className="container relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-          {stats.map((stat, index) => (
-            <div
-              key={stat.label}
-              className="text-center group"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-foreground/10 mb-4 group-hover:bg-primary-foreground/20 transition-colors">
-                <stat.icon className="h-8 w-8" />
+          {stats.map((stat, index) => {
+            const Icon = iconMap[index % iconMap.length];
+            return (
+              <div
+                key={stat.label}
+                className="text-center group"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-foreground/10 mb-4 group-hover:bg-primary-foreground/20 transition-colors">
+                  <Icon className="h-8 w-8" />
+                </div>
+                <div className="text-4xl md:text-5xl font-bold font-display mb-2">
+                  {stat.value}<span className="text-accent">{stat.suffix || ""}</span>
+                </div>
+                <p className="text-sm md:text-base text-primary-foreground/80">
+                  {stat.label}
+                </p>
               </div>
-              <div className="text-4xl md:text-5xl font-bold font-display mb-2">
-                {stat.value}<span className="text-accent">{stat.suffix}</span>
-              </div>
-              <p className="text-sm md:text-base text-primary-foreground/80">
-                {stat.label}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

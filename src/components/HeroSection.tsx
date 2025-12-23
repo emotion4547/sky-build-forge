@@ -1,14 +1,29 @@
 import { Button } from "@/components/ui/button";
 import { Calculator, Phone, ChevronDown, CheckCircle } from "lucide-react";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import heroImage from "@/assets/hero-construction.jpg";
 
-const highlights = [
-  "От 6 недель",
-  "Гарантия 5 лет",
-  "Под ключ",
-];
+interface HeroSettings {
+  badge: string;
+  title: string;
+  titleAccent: string;
+  description: string;
+  highlights: string[];
+  phone: string;
+}
+
+const defaultHero: HeroSettings = {
+  badge: "Приволжский федеральный округ",
+  title: "Быстровозводимые",
+  titleAccent: "здания",
+  description: "Проектирование и строительство складов, цехов, ангаров. Собственное производство металлоконструкций.",
+  highlights: ["От 6 недель", "Гарантия 5 лет", "Под ключ"],
+  phone: "+7 (800) 555-35-35",
+};
 
 export function HeroSection() {
+  const { data: hero } = useSiteSettings<HeroSettings>("hero", defaultHero);
+
   const scrollToForm = () => {
     document.getElementById('lead-form')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -35,21 +50,21 @@ export function HeroSection() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
-            <span className="text-sm font-medium text-foreground">Приволжский федеральный округ</span>
+            <span className="text-sm font-medium text-foreground">{hero.badge}</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold font-display text-foreground leading-[1.1] mb-6">
-            Быстровозводимые
-            <span className="block text-primary">здания</span>
+            {hero.title}
+            <span className="block text-primary">{hero.titleAccent}</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
-            Проектирование и строительство складов, цехов, ангаров. Собственное производство металлоконструкций.
+            {hero.description}
           </p>
 
           {/* Highlights */}
           <div className="flex flex-wrap gap-4 mb-10">
-            {highlights.map((item) => (
+            {hero.highlights.map((item) => (
               <div key={item} className="flex items-center gap-2 text-sm">
                 <CheckCircle className="h-5 w-5 text-primary" />
                 <span className="font-medium">{item}</span>
@@ -65,7 +80,7 @@ export function HeroSection() {
             </Button>
             <Button variant="heroOutline" size="xl">
               <Phone className="h-5 w-5" />
-              +7 (800) 555-35-35
+              {hero.phone}
             </Button>
           </div>
         </div>

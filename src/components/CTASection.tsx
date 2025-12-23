@@ -1,7 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Calculator, Phone, ArrowRight } from "lucide-react";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+
+interface CTASettings {
+  title: string;
+  titleAccent: string;
+  description: string;
+  phone: string;
+}
+
+const defaultCTA: CTASettings = {
+  title: "Готовы обсудить",
+  titleAccent: "ваш проект?",
+  description: "Получите бесплатную консультацию и предварительный расчёт стоимости вашего объекта уже сегодня",
+  phone: "+7 (800) 555-35-35",
+};
 
 export function CTASection() {
+  const { data: cta } = useSiteSettings<CTASettings>("cta", defaultCTA);
+
   const scrollToForm = () => {
     document.getElementById('lead-form')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -18,11 +35,11 @@ export function CTASection() {
             Начните проект
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display mb-6">
-            Готовы обсудить
-            <span className="text-accent"> ваш проект?</span>
+            {cta.title}
+            <span className="text-accent"> {cta.titleAccent}</span>
           </h2>
           <p className="text-xl text-primary-foreground/80 mb-10 max-w-2xl mx-auto">
-            Получите бесплатную консультацию и предварительный расчёт стоимости вашего объекта уже сегодня
+            {cta.description}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -41,7 +58,7 @@ export function CTASection() {
               className="border-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary"
             >
               <Phone className="h-5 w-5" />
-              +7 (800) 555-35-35
+              {cta.phone}
             </Button>
           </div>
         </div>
