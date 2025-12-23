@@ -56,14 +56,21 @@ const Contacts = () => {
             <div>
               <div className="space-y-6 mb-8">
                 {[
-                  { icon: MapPin, title: "Адрес", text: "г. Оренбург, ул. Промышленная, 1" },
-                  { icon: Phone, title: "Телефон", text: "+7 (3532) 12-34-56" },
-                  { icon: Mail, title: "Email", text: "info@skb-ural56.ru" },
+                  { icon: MapPin, title: "Адрес", text: "460019, Оренбургская область, г. Оренбург, мкр. Посёлок Кушкуль, ул. Просвещения, д. 19/4" },
+                  { icon: Phone, title: "Телефон", text: "+7 (932) 536-91-29", href: "tel:+79325369129" },
+                  { icon: Mail, title: "Email", text: "skbural@mail.ru", href: "mailto:skbural@mail.ru" },
                   { icon: Clock, title: "Режим работы", text: "Пн–Пт: 9:00–18:00" },
                 ].map(item => (
                   <div key={item.title} className="flex items-start gap-4">
                     <div className="icon-box shrink-0"><item.icon className="h-5 w-5 text-primary" /></div>
-                    <div><p className="font-medium">{item.title}</p><p className="text-muted-foreground">{item.text}</p></div>
+                    <div>
+                      <p className="font-medium">{item.title}</p>
+                      {item.href ? (
+                        <a href={item.href} className="text-muted-foreground hover:text-primary transition-colors">{item.text}</a>
+                      ) : (
+                        <p className="text-muted-foreground">{item.text}</p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

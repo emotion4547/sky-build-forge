@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import logo from "@/assets/logo.png";
 
 const navItems = [
   { label: "Главная", href: "/" },
@@ -48,8 +49,7 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-primary" />
-          <span className="text-lg font-bold text-foreground">СКБ УРАЛ56</span>
+          <img src={logo} alt="СКБ УРАЛ56" className="h-9 w-auto" />
         </Link>
 
         {/* Desktop Navigation */}
