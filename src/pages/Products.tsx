@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Warehouse, Factory, Building, Store, Car, Wheat, Heart, Building2, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PaginationControls } from "@/components/PaginationControls";
 
 const iconMap: Record<string, any> = {
   Warehouse, Factory, Building, Store, Car, Wheat, Heart, Building2
@@ -19,9 +20,12 @@ interface Product {
   gallery: string[] | null;
 }
 
+const ITEMS_PER_PAGE = 9;
+
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -39,6 +43,12 @@ const Products = () => {
 
     fetchProducts();
   }, []);
+
+  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
+  const paginatedProducts = products.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -61,7 +71,7 @@ const Products = () => {
                 </div>
               ))
             ) : (
-              products.map((product) => {
+              paginatedProducts.map((product) => {
                 const Icon = iconMap[product.icon] || Building;
                 return (
                   <Link
@@ -85,6 +95,12 @@ const Products = () => {
               })
             )}
           </div>
+
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </main>
       <Footer />

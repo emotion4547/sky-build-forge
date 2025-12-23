@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PaginationControls } from "@/components/PaginationControls";
 
 interface Article {
   slug: string;
@@ -15,9 +16,12 @@ interface Article {
   published_at: string;
 }
 
+const ITEMS_PER_PAGE = 9;
+
 const CompanyPress = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -35,6 +39,12 @@ const CompanyPress = () => {
 
     fetchArticles();
   }, []);
+
+  const totalPages = Math.ceil(articles.length / ITEMS_PER_PAGE);
+  const paginatedArticles = articles.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -64,7 +74,7 @@ const CompanyPress = () => {
                 </div>
               ))
             ) : (
-              articles.map(article => (
+              paginatedArticles.map(article => (
                 <Link 
                   key={article.slug} 
                   to={`/company/press/${article.slug}`} 
@@ -91,6 +101,12 @@ const CompanyPress = () => {
               ))
             )}
           </div>
+
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </main>
       <Footer />
