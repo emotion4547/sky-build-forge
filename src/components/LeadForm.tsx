@@ -86,12 +86,19 @@ export const LeadForm = () => {
   };
 
   return (
-    <section id="lead-form" className="py-16 md:py-24 bg-secondary">
-      <div className="container">
+    <section id="lead-form" className="py-20 md:py-28 bg-gradient-to-b from-secondary/50 to-background relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-1/4 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 left-0 w-48 h-48 bg-accent/10 rounded-full blur-3xl" />
+
+      <div className="container relative z-10">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold font-display mb-4">Рассчитать проект</h2>
-            <p className="text-muted-foreground">Заполните форму и получите предварительную оценку стоимости</p>
+          <div className="text-center mb-12">
+            <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">
+              Оставить заявку
+            </span>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display mb-4">Рассчитать проект</h2>
+            <p className="text-muted-foreground text-lg">Заполните форму и получите предварительную оценку стоимости в течение 2 часов</p>
           </div>
 
           <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-5">
