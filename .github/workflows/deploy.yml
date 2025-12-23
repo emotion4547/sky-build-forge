@@ -10,33 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Build project
-      run: npm run build
-      env:
-        VITE_SUPABASE_URL: \${{ secrets.VITE_SUPABASE_URL }}
-        VITE_SUPABASE_PUBLISHABLE_KEY: \${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-    
-    - name: Deploy to server via rsync
+    - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: \${{ secrets.SSH_HOST }}
         username: \${{ secrets.SSH_USERNAME }}
         key: \${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd /var/www/skbural56
-          git pull origin main
-          npm ci
-          npm run build
-          systemctl reload nginx
+        script: /root/deploy-skbural.sh
