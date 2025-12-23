@@ -1,14 +1,45 @@
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { products } from "@/data/products";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Warehouse, Factory, Building, Store, Car, Wheat, Heart, Building2, ArrowRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const iconMap: Record<string, any> = {
   Warehouse, Factory, Building, Store, Car, Wheat, Heart, Building2
 };
 
+interface Product {
+  slug: string;
+  title: string;
+  excerpt: string;
+  icon: string;
+  price_from: number;
+  gallery: string[] | null;
+}
+
 const Products = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("slug, title, excerpt, icon, price_from, gallery")
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setProducts(data);
+      }
+      setLoading(false);
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -20,28 +51,39 @@ const Products = () => {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => {
-              const Icon = iconMap[product.icon] || Building;
-              return (
-                <Link
-                  key={product.slug}
-                  to={`/products/${product.slug}`}
-                  className="group card-hover bg-card rounded-xl p-6 border border-border"
-                >
-                  <div className="icon-box mb-4">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-foreground mb-2">{product.title}</h2>
-                  <p className="text-muted-foreground text-sm mb-4">{product.excerpt}</p>
-                  <p className="text-primary font-medium mb-4">
-                    От {product.priceFrom.toLocaleString()} ₽/м²
-                  </p>
-                  <span className="flex items-center text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                    Подробнее <ArrowRight className="ml-1 h-4 w-4" />
-                  </span>
-                </Link>
-              );
-            })}
+            {loading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-card rounded-xl p-6 border border-border">
+                  <Skeleton className="h-12 w-12 rounded-lg mb-4" />
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-full mb-4" />
+                  <Skeleton className="h-5 w-1/3" />
+                </div>
+              ))
+            ) : (
+              products.map((product) => {
+                const Icon = iconMap[product.icon] || Building;
+                return (
+                  <Link
+                    key={product.slug}
+                    to={`/products/${product.slug}`}
+                    className="group card-hover bg-card rounded-xl p-6 border border-border"
+                  >
+                    <div className="icon-box mb-4">
+                      <Icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-foreground mb-2">{product.title}</h2>
+                    <p className="text-muted-foreground text-sm mb-4">{product.excerpt}</p>
+                    <p className="text-primary font-medium mb-4">
+                      От {product.price_from.toLocaleString()} ₽/м²
+                    </p>
+                    <span className="flex items-center text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                      Подробнее <ArrowRight className="ml-1 h-4 w-4" />
+                    </span>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
       </main>
