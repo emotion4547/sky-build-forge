@@ -95,23 +95,45 @@ const Products = () => {
             ) : (
               paginatedProducts.map((product) => {
                 const Icon = iconMap[product.icon] || Building;
+                const coverImage = product.gallery?.[0];
                 return (
                   <Link
                     key={product.slug}
                     to={`/products/${product.slug}`}
-                    className="group card-hover bg-card rounded-xl p-6 border border-border"
+                    className="group card-hover bg-card rounded-xl border border-border overflow-hidden"
                   >
-                    <div className="icon-box mb-4">
-                      <Icon className="h-6 w-6 text-primary" />
+                    {/* Cover Image */}
+                    <div className="aspect-[16/10] bg-secondary overflow-hidden">
+                      {coverImage ? (
+                        <img 
+                          src={coverImage} 
+                          alt={product.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Icon className="h-12 w-12 text-muted-foreground/50" />
+                        </div>
+                      )}
                     </div>
-                    <h2 className="text-xl font-semibold text-foreground mb-2">{product.title}</h2>
-                    <p className="text-muted-foreground text-sm mb-4">{product.excerpt}</p>
-                    <p className="text-primary font-medium mb-4">
-                      От {product.price_from.toLocaleString()} ₽/м²
-                    </p>
-                    <span className="flex items-center text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                      Подробнее <ArrowRight className="ml-1 h-4 w-4" />
-                    </span>
+                    
+                    <div className="p-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="icon-box shrink-0">
+                          <Icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-foreground">{product.title}</h2>
+                      </div>
+                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{product.excerpt}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-primary font-semibold">
+                          От {product.price_from.toLocaleString()} ₽/м²
+                        </p>
+                        <span className="flex items-center text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                          Подробнее <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </span>
+                      </div>
+                    </div>
                   </Link>
                 );
               })
