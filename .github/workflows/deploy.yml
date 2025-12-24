@@ -13,7 +13,8 @@ jobs:
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: \${{ secrets.SSH_HOST }}
-        username: \${{ secrets.SSH_USERNAME }}
-        key: \${{ secrets.SSH_PRIVATE_KEY }}
-        script: /root/deploy-skbural.sh
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          /root/deploy-skbural.sh
