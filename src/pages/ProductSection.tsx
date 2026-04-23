@@ -27,12 +27,14 @@ const ProductSection = () => {
       if (!sectionSlug) return;
       setLoading(true);
 
-      const { data: sectionData } = await supabase
+      const { data: sectionDataRaw } = await supabase
         .from("catalog_sections" as any)
         .select("*")
         .eq("slug", sectionSlug)
         .eq("is_published", true)
         .maybeSingle();
+
+      const sectionData = (sectionDataRaw as unknown) as CatalogSection | null;
 
       if (!sectionData) {
         setSection(null);
@@ -59,8 +61,8 @@ const ProductSection = () => {
           .order("created_at", { ascending: false }),
       ]);
 
-      setSection(sectionData as CatalogSection);
-      setSubcategories((subcategoriesResponse.data as CatalogSubcategory[]) || []);
+      setSection(sectionData);
+      setSubcategories(((subcategoriesResponse.data as unknown) as CatalogSubcategory[]) || []);
       setProducts((productsResponse.data || []).map(normalizeProduct));
       setLoading(false);
     };

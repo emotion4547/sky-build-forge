@@ -32,8 +32,8 @@ export function BuildingTypesSection() {
           .order("created_at", { ascending: false }),
       ]);
 
-      setSections((sectionsResponse.data as CatalogSection[]) || []);
-      setSubcategories((subcategoriesResponse.data as CatalogSubcategory[]) || []);
+      setSections(((sectionsResponse.data as unknown) as CatalogSection[]) || []);
+      setSubcategories(((subcategoriesResponse.data as unknown) as CatalogSubcategory[]) || []);
       setProducts((productsResponse.data || []).map(normalizeProduct));
     };
 
