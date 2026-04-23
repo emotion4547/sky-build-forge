@@ -30,13 +30,30 @@ export const LeadForm = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      const allowedTypes = ['application/pdf', 'image/vnd.dwg', 'application/acad', 'application/x-dwg'];
+      const allowedTypes = [
+        'application/pdf',
+        'image/vnd.dwg',
+        'application/acad',
+        'application/x-dwg'
+      ];
+      const isImage = selectedFile.type.startsWith('image/');
+      const isAllowedFileType = allowedTypes.includes(selectedFile.type) || isImage;
       const maxSize = 10 * 1024 * 1024; // 10MB
-      
+
+      if (!isAllowedFileType) {
+        toast({
+          title: "Ошибка",
+          description: "Можно загрузить PDF, DWG или фотографию",
+          variant: "destructive"
+        });
+        return;
+      }
+
       if (selectedFile.size > maxSize) {
         toast({ title: "Ошибка", description: "Файл слишком большой (макс. 10 МБ)", variant: "destructive" });
         return;
       }
+
       setFile(selectedFile);
     }
   };
@@ -180,7 +197,7 @@ export const LeadForm = () => {
             </div>
 
             <div>
-              <Label className="mb-2 block">Прикрепить файл (PDF, DWG)</Label>
+              <Label className="mb-2 block">Прикрепить файл или фото (PDF, DWG, JPG, PNG)</Label>
               {file ? (
                 <div className="flex items-center gap-3 p-3 bg-secondary rounded-lg">
                   <Upload className="h-5 w-5 text-primary shrink-0" />
@@ -198,10 +215,10 @@ export const LeadForm = () => {
               ) : (
                 <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
                   <Upload className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Нажмите для загрузки (макс. 10 МБ)</span>
+                  <span className="text-sm text-muted-foreground">Нажмите для загрузки файла или фото (макс. 10 МБ)</span>
                   <input
                     type="file"
-                    accept=".pdf,.dwg"
+                    accept=".pdf,.dwg,image/*"
                     className="hidden"
                     onChange={handleFileChange}
                   />
