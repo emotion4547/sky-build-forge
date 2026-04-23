@@ -1,150 +1,201 @@
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Search } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
-import { Warehouse, Factory, Building, Store, Car, Wheat, Heart, Building2, ArrowRight, Search } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PaginationControls } from "@/components/PaginationControls";
 import { Input } from "@/components/ui/input";
-
-const iconMap: Record<string, any> = {
-  Warehouse, Factory, Building, Store, Car, Wheat, Heart, Building2
-};
-
-interface Product {
-  slug: string;
-  title: string;
-  excerpt: string;
-  icon: string;
-  price_from: number;
-  gallery: string[] | null;
-}
-
-const ITEMS_PER_PAGE = 9;
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { supabase } from "@/integrations/supabase/client";
+import { CatalogProduct, CatalogSection, CatalogSubcategory, getCatalogIcon, normalizeProduct, pluralize } from "@/lib/catalog";
 
 const Products = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [sections, setSections] = useState<CatalogSection[]>([]);
+  const [subcategories, setSubcategories] = useState<CatalogSubcategory[]>([]);
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("slug, title, excerpt, icon, price_from, gallery")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false });
+    const fetchCatalog = async () => {
+      setLoading(true);
+      const [sectionsResponse, subcategoriesResponse, productsResponse] = await Promise.all([
+        supabase
+          .from("catalog_sections" as any)
+          .select("*")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true })
+          .order("title", { ascending: true }),
+        supabase
+          .from("catalog_subcategories" as any)
+          .select("*")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true })
+          .order("title", { ascending: true }),
+        supabase
+          .from("products")
+          .select("*")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: false }),
+      ]);
 
-      if (!error && data) {
-        setProducts(data);
-      }
+      setSections((sectionsResponse.data as CatalogSection[]) || []);
+      setSubcategories((subcategoriesResponse.data as CatalogSubcategory[]) || []);
+      setProducts((productsResponse.data || []).map(normalizeProduct));
       setLoading(false);
     };
 
-    fetchProducts();
+    fetchCatalog();
   }, []);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(product =>
-      product.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [products, searchQuery]);
+  const filteredSections = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+    if (!query) return sections;
 
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+    return sections.filter((section) => {
+      const sectionSubcategories = subcategories.filter((subcategory) => subcategory.section_id === section.id);
+      const sectionProducts = products.filter((product) => product.section_id === section.id);
+
+      return [
+        section.title,
+        section.description || "",
+        ...sectionSubcategories.map((subcategory) => `${subcategory.title} ${subcategory.description || ""}`),
+        ...sectionProducts.map((product) => `${product.title} ${product.excerpt}`),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    });
+  }, [searchQuery, sections, subcategories, products]);
+
+  const counts = useMemo(() => {
+    return sections.reduce<Record<string, { subcategories: number; products: number }>>((acc, section) => {
+      acc[section.id] = {
+        subcategories: subcategories.filter((subcategory) => subcategory.section_id === section.id).length,
+        products: products.filter((product) => product.section_id === section.id).length,
+      };
+      return acc;
+    }, {});
+  }, [sections, subcategories, products]);
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 py-12 md:py-16">
-        <div className="container">
-          <h1 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-4">Продукция</h1>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl">
-            Быстровозводимые здания для любых задач: от складов до медицинских объектов
-          </p>
+        <div className="container space-y-8">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">Главная</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Продукция</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
 
-          <div className="relative max-w-md mb-8">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Поиск по названию..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-card rounded-xl p-6 border border-border">
-                  <Skeleton className="h-12 w-12 rounded-lg mb-4" />
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-full mb-4" />
-                  <Skeleton className="h-5 w-1/3" />
+          <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+            <div>
+              <span className="inline-flex rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Каталог решений
+              </span>
+              <h1 className="mt-4 text-3xl md:text-4xl font-bold font-display text-foreground">Продукция</h1>
+              <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
+                Выберите нужный раздел каталога, чтобы перейти к подкатегориям и страницам конкретных решений.
+              </p>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Поиск по разделам и решениям..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </section>
+
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="rounded-2xl border border-border bg-card overflow-hidden">
+                  <Skeleton className="aspect-[16/10] w-full" />
+                  <div className="space-y-3 p-6">
+                    <Skeleton className="h-6 w-1/2" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
                 </div>
-              ))
-            ) : (
-              paginatedProducts.map((product) => {
-                const Icon = iconMap[product.icon] || Building;
-                const coverImage = product.gallery?.[0];
+              ))}
+            </div>
+          ) : filteredSections.length === 0 ? (
+            <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
+              По вашему запросу разделы каталога не найдены.
+            </div>
+          ) : (
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredSections.map((section) => {
+                const IconComponent = getCatalogIcon(section.icon);
+                const image = section.image || products.find((product) => product.section_id === section.id)?.gallery?.[0] || "/placeholder.svg";
+                const sectionCounts = counts[section.id] || { subcategories: 0, products: 0 };
+
                 return (
                   <Link
-                    key={product.slug}
-                    to={`/products/${product.slug}`}
-                    className="group card-hover bg-card rounded-xl border border-border overflow-hidden"
+                    key={section.id}
+                    to={`/products/section/${section.slug}`}
+                    className="group overflow-hidden rounded-2xl border border-border bg-card card-hover"
                   >
-                    {/* Cover Image */}
-                    <div className="aspect-[16/10] bg-secondary overflow-hidden">
-                      {coverImage ? (
-                        <img 
-                          src={coverImage} 
-                          alt={product.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Icon className="h-12 w-12 text-muted-foreground/50" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="p-6">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="icon-box shrink-0">
-                          <Icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <h2 className="text-xl font-semibold text-foreground">{product.title}</h2>
+                    <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
+                      <img
+                        src={image}
+                        alt={section.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5" />
+                      <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/90 text-primary-foreground shadow-sm">
+                        <IconComponent className="h-5 w-5" />
                       </div>
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{product.excerpt}</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-primary font-semibold">
-                          От {product.price_from.toLocaleString()} ₽/м²
-                        </p>
-                        <span className="flex items-center text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                          Подробнее <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </div>
+
+                    <div className="space-y-4 p-6">
+                      <div className="space-y-2">
+                        <h2 className="text-2xl font-semibold text-foreground">{section.title}</h2>
+                        <p className="text-muted-foreground leading-7">{section.description}</p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                        <span className="rounded-full bg-secondary px-3 py-1">
+                          {sectionCounts.subcategories} {pluralize(sectionCounts.subcategories, ["подкатегория", "подкатегории", "подкатегорий"])}
                         </span>
+                        <span className="rounded-full bg-secondary px-3 py-1">
+                          {sectionCounts.products} {pluralize(sectionCounts.products, ["решение", "решения", "решений"])}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                        Перейти в раздел
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </div>
                     </div>
                   </Link>
                 );
-              })
-            )}
-          </div>
-
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+              })}
+            </section>
+          )}
         </div>
       </main>
       <Footer />
