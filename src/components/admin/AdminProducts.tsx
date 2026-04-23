@@ -61,6 +61,45 @@ interface ProductSection {
   items: string[];
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const parseMetrics = (value: unknown): ProductMetric[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!isRecord(item)) return null;
+      return {
+        label: typeof item.label === "string" ? item.label : "",
+        value: typeof item.value === "string" ? item.value : "",
+      };
+    })
+    .filter((item): item is ProductMetric => Boolean(item));
+};
+
+const parseSections = (value: unknown): ProductSection[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!isRecord(item)) return null;
+      return {
+        title: typeof item.title === "string" ? item.title : "",
+        body: typeof item.body === "string" ? item.body : "",
+        items: Array.isArray(item.items) ? item.items.filter((listItem): listItem is string => typeof listItem === "string") : [],
+      };
+    })
+    .filter((item): item is ProductSection => Boolean(item));
+};
+
+const normalizeProduct = (product: any): Product => ({
+  ...product,
+  overview: product.overview ?? "",
+  hero_metrics: parseMetrics(product.hero_metrics),
+  content_sections: parseSections(product.content_sections),
+});
+
 const emptyProduct: Omit<Product, 'id' | 'created_at'> = {
   slug: "",
   title: "",
@@ -106,7 +145,7 @@ export const AdminProducts = () => {
     if (error) {
       toast({ title: "Ошибка", description: "Не удалось загрузить продукты", variant: "destructive" });
     } else {
-      setProducts(data || []);
+      setProducts((data || []).map(normalizeProduct));
     }
     setLoading(false);
   };
@@ -117,7 +156,7 @@ export const AdminProducts = () => {
   };
 
   const openEditDialog = (product: Product) => {
-    setCurrentProduct(product);
+    setCurrentProduct(normalizeProduct(product));
     setEditDialogOpen(true);
   };
 
