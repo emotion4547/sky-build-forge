@@ -135,6 +135,58 @@ const emptyProduct = (sectionId = "", subcategoryId = ""): ProductForm => ({
   catalog_card_description: "",
 });
 
+const cyrillicToLatinMap: Record<string, string> = {
+  а: "a",
+  б: "b",
+  в: "v",
+  г: "g",
+  д: "d",
+  е: "e",
+  ё: "e",
+  ж: "zh",
+  з: "z",
+  и: "i",
+  й: "y",
+  к: "k",
+  л: "l",
+  м: "m",
+  н: "n",
+  о: "o",
+  п: "p",
+  р: "r",
+  с: "s",
+  т: "t",
+  у: "u",
+  ф: "f",
+  х: "h",
+  ц: "cz",
+  ч: "ch",
+  ш: "sh",
+  щ: "sch",
+  ъ: "",
+  ы: "y",
+  ь: "",
+  э: "e",
+  ю: "yu",
+  я: "ya",
+};
+
+const generateSlug = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .split("")
+    .map((char) => cyrillicToLatinMap[char] ?? char)
+    .join("")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+
+const shouldSyncSlug = (currentSlug: string, currentTitle: string) => {
+  const normalizedSlug = generateSlug(currentSlug);
+  return !normalizedSlug || normalizedSlug === generateSlug(currentTitle);
+};
+
 export const AdminProducts = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("sections");
@@ -265,9 +317,11 @@ export const AdminProducts = () => {
   const saveSection = async () => {
     if (!currentSection) return;
 
+    const slug = generateSlug(currentSection.slug || currentSection.title);
+
     const payload = {
       title: currentSection.title,
-      slug: currentSection.slug,
+      slug,
       description: currentSection.description || null,
       image: currentSection.image[0] || null,
       icon: currentSection.icon,
@@ -315,10 +369,12 @@ export const AdminProducts = () => {
   const saveSubcategory = async () => {
     if (!currentSubcategory) return;
 
+    const slug = generateSlug(currentSubcategory.slug || currentSubcategory.title);
+
     const payload = {
       section_id: currentSubcategory.section_id,
       title: currentSubcategory.title,
-      slug: currentSubcategory.slug,
+      slug,
       description: currentSubcategory.description || null,
       image: currentSubcategory.image[0] || null,
       display_mode: currentSubcategory.display_mode,
@@ -358,6 +414,8 @@ export const AdminProducts = () => {
   const saveProduct = async () => {
     if (!currentProduct) return;
 
+    const slug = generateSlug(currentProduct.slug || currentProduct.title);
+
     const normalizedMetrics = (currentProduct.hero_metrics || [])
       .map((metric) => ({
         label: metric.label?.trim() || "",
@@ -374,7 +432,7 @@ export const AdminProducts = () => {
       .filter((section) => section.title || section.body || section.items.length > 0);
 
     const payload = {
-      slug: currentProduct.slug,
+      slug,
       title: currentProduct.title,
       excerpt: currentProduct.excerpt,
       overview: currentProduct.overview || null,
@@ -824,11 +882,23 @@ export const AdminProducts = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label>Название</Label>
-                  <Input value={currentSection.title} onChange={(event) => setCurrentSection({ ...currentSection, title: event.target.value })} />
+                  <Input
+                    value={currentSection.title}
+                    onChange={(event) => {
+                      const title = event.target.value;
+                      setCurrentSection({
+                        ...currentSection,
+                        title,
+                        slug: shouldSyncSlug(currentSection.slug, currentSection.title)
+                          ? generateSlug(title)
+                          : currentSection.slug,
+                      });
+                    }}
+                  />
                 </div>
                 <div>
                   <Label>Slug</Label>
-                  <Input value={currentSection.slug} onChange={(event) => setCurrentSection({ ...currentSection, slug: event.target.value })} />
+                  <Input value={currentSection.slug} onChange={(event) => setCurrentSection({ ...currentSection, slug: generateSlug(event.target.value) })} />
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -893,11 +963,26 @@ export const AdminProducts = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label>Название</Label>
-                  <Input value={currentSubcategory.title} onChange={(event) => setCurrentSubcategory({ ...currentSubcategory, title: event.target.value })} />
+                  <Input
+                    value={currentSubcategory.title}
+                    onChange={(event) => {
+                      const title = event.target.value;
+                      setCurrentSubcategory({
+                        ...currentSubcategory,
+                        title,
+                        slug: shouldSyncSlug(currentSubcategory.slug, currentSubcategory.title)
+                          ? generateSlug(title)
+                          : currentSubcategory.slug,
+                      });
+                    }}
+                  />
                 </div>
                 <div>
                   <Label>Slug</Label>
-                  <Input value={currentSubcategory.slug} onChange={(event) => setCurrentSubcategory({ ...currentSubcategory, slug: event.target.value })} />
+                  <Input
+                    value={currentSubcategory.slug}
+                    onChange={(event) => setCurrentSubcategory({ ...currentSubcategory, slug: generateSlug(event.target.value) })}
+                  />
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -955,7 +1040,7 @@ export const AdminProducts = () => {
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div>
                   <Label>Slug</Label>
-                  <Input value={currentProduct.slug} onChange={(event) => setCurrentProduct({ ...currentProduct, slug: event.target.value })} />
+                  <Input value={currentProduct.slug} onChange={(event) => setCurrentProduct({ ...currentProduct, slug: generateSlug(event.target.value) })} />
                 </div>
                 <div>
                   <Label>Иконка</Label>
@@ -999,7 +1084,19 @@ export const AdminProducts = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label>Название</Label>
-                  <Input value={currentProduct.title} onChange={(event) => setCurrentProduct({ ...currentProduct, title: event.target.value })} />
+                  <Input
+                    value={currentProduct.title}
+                    onChange={(event) => {
+                      const title = event.target.value;
+                      setCurrentProduct({
+                        ...currentProduct,
+                        title,
+                        slug: shouldSyncSlug(currentProduct.slug, currentProduct.title)
+                          ? generateSlug(title)
+                          : currentProduct.slug,
+                      });
+                    }}
+                  />
                 </div>
                 <div>
                   <Label>Порядок</Label>
