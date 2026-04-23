@@ -172,6 +172,95 @@ export type Database = {
         }
         Relationships: []
       }
+      catalog_sections: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          image: string | null
+          is_published: boolean
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          image?: string | null
+          is_published?: boolean
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          image?: string | null
+          is_published?: boolean
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      catalog_subcategories: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_mode: string
+          id: string
+          image: string | null
+          is_published: boolean
+          section_id: string
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_mode?: string
+          id?: string
+          image?: string | null
+          is_published?: boolean
+          section_id: string
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_mode?: string
+          id?: string
+          image?: string | null
+          is_published?: boolean
+          section_id?: string
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_subcategories_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           area_m2: number | null
@@ -223,6 +312,8 @@ export type Database = {
       products: {
         Row: {
           applications: string[] | null
+          catalog_card_description: string | null
+          catalog_card_title: string | null
           content_sections: Json
           created_at: string
           excerpt: string
@@ -236,19 +327,24 @@ export type Database = {
           price_from: number
           price_to: number
           related_projects: string[] | null
+          section_id: string | null
           slug: string
+          sort_order: number
           specs_fire_resistance: string | null
           specs_heights: string | null
           specs_insulation: string | null
           specs_snow_load: string | null
           specs_spans: string | null
           steps: Json | null
+          subcategory_id: string | null
           title: string
           updated_at: string
           usp: string[] | null
         }
         Insert: {
           applications?: string[] | null
+          catalog_card_description?: string | null
+          catalog_card_title?: string | null
           content_sections?: Json
           created_at?: string
           excerpt: string
@@ -262,19 +358,24 @@ export type Database = {
           price_from: number
           price_to: number
           related_projects?: string[] | null
+          section_id?: string | null
           slug: string
+          sort_order?: number
           specs_fire_resistance?: string | null
           specs_heights?: string | null
           specs_insulation?: string | null
           specs_snow_load?: string | null
           specs_spans?: string | null
           steps?: Json | null
+          subcategory_id?: string | null
           title: string
           updated_at?: string
           usp?: string[] | null
         }
         Update: {
           applications?: string[] | null
+          catalog_card_description?: string | null
+          catalog_card_title?: string | null
           content_sections?: Json
           created_at?: string
           excerpt?: string
@@ -288,18 +389,36 @@ export type Database = {
           price_from?: number
           price_to?: number
           related_projects?: string[] | null
+          section_id?: string | null
           slug?: string
+          sort_order?: number
           specs_fire_resistance?: string | null
           specs_heights?: string | null
           specs_insulation?: string | null
           specs_snow_load?: string | null
           specs_spans?: string | null
           steps?: Json | null
+          subcategory_id?: string | null
           title?: string
           updated_at?: string
           usp?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_subcategories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {
