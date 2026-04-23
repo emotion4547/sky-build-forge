@@ -46,7 +46,7 @@ const parseMetrics = (value: unknown) =>
             value: typeof item.value === "string" ? item.value : "",
           };
         })
-        .filter((item): item is { label: string; value: string } => Boolean(item) && item.label && item.value)
+        .filter((item): item is { label: string; value: string } => Boolean(item && item.label && item.value))
     : [];
 
 const parseSections = (value: unknown) =>
@@ -60,7 +60,7 @@ const parseSections = (value: unknown) =>
             items: Array.isArray(item.items) ? item.items.filter((listItem): listItem is string => typeof listItem === "string") : [],
           };
         })
-        .filter((item): item is { title: string; body: string; items: string[] } => Boolean(item) && (item.title || item.body || item.items.length > 0))
+        .filter((item): item is { title: string; body: string; items: string[] } => Boolean(item && (item.title || item.body || item.items.length > 0)))
     : [];
 
 const ProductDetail = () => {
