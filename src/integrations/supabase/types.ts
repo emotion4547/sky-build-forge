@@ -223,13 +223,16 @@ export type Database = {
       products: {
         Row: {
           applications: string[] | null
+          content_sections: Json
           created_at: string
           excerpt: string
           faq: Json | null
           gallery: string[] | null
+          hero_metrics: Json
           icon: string
           id: string
           is_published: boolean | null
+          overview: string | null
           price_from: number
           price_to: number
           related_projects: string[] | null
@@ -246,13 +249,16 @@ export type Database = {
         }
         Insert: {
           applications?: string[] | null
+          content_sections?: Json
           created_at?: string
           excerpt: string
           faq?: Json | null
           gallery?: string[] | null
+          hero_metrics?: Json
           icon: string
           id?: string
           is_published?: boolean | null
+          overview?: string | null
           price_from: number
           price_to: number
           related_projects?: string[] | null
@@ -269,13 +275,16 @@ export type Database = {
         }
         Update: {
           applications?: string[] | null
+          content_sections?: Json
           created_at?: string
           excerpt?: string
           faq?: Json | null
           gallery?: string[] | null
+          hero_metrics?: Json
           icon?: string
           id?: string
           is_published?: boolean | null
+          overview?: string | null
           price_from?: number
           price_to?: number
           related_projects?: string[] | null

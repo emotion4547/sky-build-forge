@@ -12,9 +12,12 @@ interface Product {
   slug: string;
   title: string;
   excerpt: string;
+  overview: string | null;
   price_from: number;
   price_to: number;
   usp: string[] | null;
+  hero_metrics: { label: string; value: string }[] | null;
+  content_sections: { title: string; body: string; items: string[] }[] | null;
   specs_spans: string | null;
   specs_heights: string | null;
   specs_insulation: string | null;
@@ -29,6 +32,36 @@ interface Project {
   area: number;
   term_weeks: number;
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const parseMetrics = (value: unknown) =>
+  Array.isArray(value)
+    ? value
+        .map((item) => {
+          if (!isRecord(item)) return null;
+          return {
+            label: typeof item.label === "string" ? item.label : "",
+            value: typeof item.value === "string" ? item.value : "",
+          };
+        })
+        .filter((item): item is { label: string; value: string } => Boolean(item && item.label && item.value))
+    : [];
+
+const parseSections = (value: unknown) =>
+  Array.isArray(value)
+    ? value
+        .map((item) => {
+          if (!isRecord(item)) return null;
+          return {
+            title: typeof item.title === "string" ? item.title : "",
+            body: typeof item.body === "string" ? item.body : "",
+            items: Array.isArray(item.items) ? item.items.filter((listItem): listItem is string => typeof listItem === "string") : [],
+          };
+        })
+        .filter((item): item is { title: string; body: string; items: string[] } => Boolean(item && (item.title || item.body || item.items.length > 0)))
+    : [];
 
 const ProductDetail = () => {
   const { slug } = useParams();
@@ -48,7 +81,12 @@ const ProductDetail = () => {
         .maybeSingle();
 
       if (productData) {
-        setProduct(productData);
+        setProduct({
+          ...productData,
+          overview: productData.overview ?? null,
+          hero_metrics: parseMetrics(productData.hero_metrics),
+          content_sections: parseSections(productData.content_sections),
+        });
         
         // Fetch related projects
         const { data: projectsData } = await supabase
@@ -129,6 +167,16 @@ const ProductDetail = () => {
               <p className="text-2xl font-bold text-primary mb-6">
                 {product.price_from.toLocaleString()} – {product.price_to.toLocaleString()} ₽/м²
               </p>
+              {product.hero_metrics && product.hero_metrics.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-3">
+                  {product.hero_metrics.map((metric) => (
+                    <div key={`${metric.label}-${metric.value}`} className="rounded-lg border border-border bg-card p-4">
+                      <p className="text-lg font-semibold text-foreground">{metric.value}</p>
+                      <p className="text-sm text-muted-foreground">{metric.label}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
               {product.usp && product.usp.length > 0 && (
                 <ul className="space-y-2 mb-8">
                   {product.usp.map((item, i) => (
@@ -207,6 +255,13 @@ const ProductDetail = () => {
           )}
 
           <section className="mb-16">
+            {product.overview && (
+              <div className="mb-8 max-w-4xl">
+                <h2 className="text-2xl font-bold font-display mb-4">О проекте</h2>
+                <p className="text-base leading-7 text-muted-foreground whitespace-pre-line">{product.overview}</p>
+              </div>
+            )}
+
             <h2 className="text-2xl font-bold font-display mb-6">Технические характеристики</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(specs).map(([key, value]) => 
@@ -219,6 +274,32 @@ const ProductDetail = () => {
               )}
             </div>
           </section>
+
+          {product.content_sections && product.content_sections.length > 0 && (
+            <section className="mb-16 space-y-8">
+              {product.content_sections.map((section, index) => (
+                <div key={`${section.title}-${index}`} className="grid gap-4 lg:grid-cols-[minmax(0,280px)_1fr] lg:gap-8">
+                  <div>
+                    <h2 className="text-2xl font-bold font-display">{section.title}</h2>
+                  </div>
+                  <div className="space-y-4">
+                    {section.body && (
+                      <p className="text-base leading-7 text-muted-foreground whitespace-pre-line">{section.body}</p>
+                    )}
+                    {section.items.length > 0 && (
+                      <ul className="grid gap-3 sm:grid-cols-2">
+                        {section.items.map((item) => (
+                          <li key={item} className="rounded-lg border border-border bg-card p-4 text-sm leading-6 text-foreground">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
 
           {relatedProjects.length > 0 && (
             <section>
