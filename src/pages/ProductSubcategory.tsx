@@ -28,12 +28,14 @@ const ProductSubcategory = () => {
       if (!sectionSlug || !subcategorySlug) return;
       setLoading(true);
 
-      const { data: sectionData } = await supabase
+      const { data: sectionDataRaw } = await supabase
         .from("catalog_sections" as any)
         .select("*")
         .eq("slug", sectionSlug)
         .eq("is_published", true)
         .maybeSingle();
+
+      const sectionData = (sectionDataRaw as unknown) as CatalogSection | null;
 
       if (!sectionData) {
         setSection(null);
@@ -43,7 +45,7 @@ const ProductSubcategory = () => {
         return;
       }
 
-      const { data: subcategoryData } = await supabase
+      const { data: subcategoryDataRaw } = await supabase
         .from("catalog_subcategories" as any)
         .select("*")
         .eq("slug", subcategorySlug)
@@ -51,8 +53,10 @@ const ProductSubcategory = () => {
         .eq("is_published", true)
         .maybeSingle();
 
+      const subcategoryData = (subcategoryDataRaw as unknown) as CatalogSubcategory | null;
+
       if (!subcategoryData) {
-        setSection(sectionData as CatalogSection);
+        setSection(sectionData);
         setSubcategory(null);
         setProducts([]);
         setLoading(false);
@@ -69,8 +73,8 @@ const ProductSubcategory = () => {
 
       const normalizedProducts = (productsData || []).map(normalizeProduct);
 
-      setSection(sectionData as CatalogSection);
-      setSubcategory(subcategoryData as CatalogSubcategory);
+      setSection(sectionData);
+      setSubcategory(subcategoryData);
       setProducts(normalizedProducts);
       setLoading(false);
 
