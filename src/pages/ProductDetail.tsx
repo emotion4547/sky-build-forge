@@ -57,41 +57,32 @@ const ProductDetail = () => {
       const normalizedProduct = normalizeProduct(productData);
       setProduct(normalizedProduct);
 
-      const queries: Promise<any>[] = [
+      const [projectsResponse, sectionResponse, subcategoryResponse] = await Promise.all([
         supabase
           .from("projects")
           .select("slug, title, area, term_weeks")
           .eq("product_type", slug)
           .eq("is_published", true)
           .limit(3),
-      ];
-
-      if (normalizedProduct.section_id) {
-        queries.push(
-          supabase
-            .from("catalog_sections" as any)
-            .select("*")
-            .eq("id", normalizedProduct.section_id)
-            .maybeSingle(),
-        );
-      }
-
-      if (normalizedProduct.subcategory_id) {
-        queries.push(
-          supabase
-            .from("catalog_subcategories" as any)
-            .select("*")
-            .eq("id", normalizedProduct.subcategory_id)
-            .maybeSingle(),
-        );
-      }
-
-      const responses = await Promise.all(queries);
-      const [projectsResponse, sectionResponse, subcategoryResponse] = responses;
+        normalizedProduct.section_id
+          ? supabase
+              .from("catalog_sections" as any)
+              .select("*")
+              .eq("id", normalizedProduct.section_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        normalizedProduct.subcategory_id
+          ? supabase
+              .from("catalog_subcategories" as any)
+              .select("*")
+              .eq("id", normalizedProduct.subcategory_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
 
       setRelatedProjects(projectsResponse?.data || []);
-      setSection((sectionResponse?.data as CatalogSection | undefined) || null);
-      setSubcategory((subcategoryResponse?.data as CatalogSubcategory | undefined) || null);
+      setSection((((sectionResponse?.data as unknown) as CatalogSection | undefined) || null));
+      setSubcategory((((subcategoryResponse?.data as unknown) as CatalogSubcategory | undefined) || null));
       setLoading(false);
     };
 
