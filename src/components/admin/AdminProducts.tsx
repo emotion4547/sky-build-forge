@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Package, RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, Search
+  Package, RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, Search, Grip, X
 } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 import { Input } from "@/components/ui/input";
@@ -32,10 +32,13 @@ interface Product {
   slug: string;
   title: string;
   excerpt: string;
+  overview: string | null;
   price_from: number;
   price_to: number;
   icon: string;
   usp: string[];
+  hero_metrics: ProductMetric[];
+  content_sections: ProductSection[];
   specs_spans: string | null;
   specs_heights: string | null;
   specs_insulation: string | null;
@@ -47,14 +50,28 @@ interface Product {
   created_at: string;
 }
 
+interface ProductMetric {
+  label: string;
+  value: string;
+}
+
+interface ProductSection {
+  title: string;
+  body: string;
+  items: string[];
+}
+
 const emptyProduct: Omit<Product, 'id' | 'created_at'> = {
   slug: "",
   title: "",
   excerpt: "",
+  overview: "",
   price_from: 0,
   price_to: 0,
   icon: "Building",
   usp: [],
+  hero_metrics: [],
+  content_sections: [],
   specs_spans: "",
   specs_heights: "",
   specs_insulation: "",
@@ -107,14 +124,32 @@ export const AdminProducts = () => {
   const saveProduct = async () => {
     if (!currentProduct) return;
 
+    const normalizedMetrics = (currentProduct.hero_metrics || [])
+      .map((metric) => ({
+        label: metric.label?.trim() || "",
+        value: metric.value?.trim() || "",
+      }))
+      .filter((metric) => metric.label && metric.value);
+
+    const normalizedSections = (currentProduct.content_sections || [])
+      .map((section) => ({
+        title: section.title?.trim() || "",
+        body: section.body?.trim() || "",
+        items: (section.items || []).map((item) => item.trim()).filter(Boolean),
+      }))
+      .filter((section) => section.title || section.body || section.items.length > 0);
+
     const productData = {
       slug: currentProduct.slug,
       title: currentProduct.title,
       excerpt: currentProduct.excerpt,
+      overview: currentProduct.overview || null,
       price_from: currentProduct.price_from,
       price_to: currentProduct.price_to,
       icon: currentProduct.icon,
       usp: currentProduct.usp || [],
+      hero_metrics: normalizedMetrics,
+      content_sections: normalizedSections,
       specs_spans: currentProduct.specs_spans || null,
       specs_heights: currentProduct.specs_heights || null,
       specs_insulation: currentProduct.specs_insulation || null,
@@ -202,6 +237,52 @@ export const AdminProducts = () => {
     return new Intl.NumberFormat('ru-RU').format(price);
   };
 
+  const updateMetric = (index: number, field: keyof ProductMetric, value: string) => {
+    if (!currentProduct) return;
+    const metrics = [...(currentProduct.hero_metrics || [])];
+    metrics[index] = { ...metrics[index], [field]: value };
+    setCurrentProduct({ ...currentProduct, hero_metrics: metrics });
+  };
+
+  const addMetric = () => {
+    if (!currentProduct) return;
+    setCurrentProduct({
+      ...currentProduct,
+      hero_metrics: [...(currentProduct.hero_metrics || []), { label: "", value: "" }],
+    });
+  };
+
+  const removeMetric = (index: number) => {
+    if (!currentProduct) return;
+    setCurrentProduct({
+      ...currentProduct,
+      hero_metrics: (currentProduct.hero_metrics || []).filter((_, itemIndex) => itemIndex !== index),
+    });
+  };
+
+  const updateSection = (index: number, field: keyof ProductSection, value: string | string[]) => {
+    if (!currentProduct) return;
+    const sections = [...(currentProduct.content_sections || [])];
+    sections[index] = { ...sections[index], [field]: value };
+    setCurrentProduct({ ...currentProduct, content_sections: sections });
+  };
+
+  const addSection = () => {
+    if (!currentProduct) return;
+    setCurrentProduct({
+      ...currentProduct,
+      content_sections: [...(currentProduct.content_sections || []), { title: "", body: "", items: [] }],
+    });
+  };
+
+  const removeSection = (index: number) => {
+    if (!currentProduct) return;
+    setCurrentProduct({
+      ...currentProduct,
+      content_sections: (currentProduct.content_sections || []).filter((_, itemIndex) => itemIndex !== index),
+    });
+  };
+
   return (
     <div>
       {/* Header */}
@@ -235,7 +316,7 @@ export const AdminProducts = () => {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Опубликовано</p>
-          <p className="text-2xl font-bold text-green-600">{products.filter(p => p.is_published).length}</p>
+          <p className="text-2xl font-bold text-primary">{products.filter(p => p.is_published).length}</p>
         </div>
       </div>
 
@@ -285,7 +366,7 @@ export const AdminProducts = () => {
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {currentProduct && 'id' in currentProduct ? "Редактировать продукт" : "Новый продукт"}
@@ -323,6 +404,14 @@ export const AdminProducts = () => {
                   onChange={(e) => setCurrentProduct({...currentProduct, excerpt: e.target.value})}
                 />
               </div>
+              <div>
+                <Label>Расширенное описание</Label>
+                <Textarea
+                  value={currentProduct.overview || ""}
+                  onChange={(e) => setCurrentProduct({...currentProduct, overview: e.target.value})}
+                  rows={5}
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Цена от (₽/м²)</Label>
@@ -348,6 +437,38 @@ export const AdminProducts = () => {
                   onChange={(e) => setCurrentProduct({...currentProduct, usp: e.target.value.split(",").map(t => t.trim()).filter(Boolean)})}
                 />
               </div>
+              <div className="space-y-3 rounded-lg border border-border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label>Метрики в шапке</Label>
+                    <p className="text-sm text-muted-foreground">Например: ветровой район, пролёт, срок работ</p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={addMetric}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добавить метрику
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(currentProduct.hero_metrics || []).map((metric, index) => (
+                    <div key={`${metric.label}-${index}`} className="grid grid-cols-[auto_1fr_1fr_auto] gap-3 items-center rounded-lg border border-border p-3">
+                      <Grip className="h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Значение"
+                        value={metric.value}
+                        onChange={(e) => updateMetric(index, "value", e.target.value)}
+                      />
+                      <Input
+                        placeholder="Подпись"
+                        value={metric.label}
+                        onChange={(e) => updateMetric(index, "label", e.target.value)}
+                      />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeMetric(index)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Пролёты</Label>
@@ -370,6 +491,79 @@ export const AdminProducts = () => {
                   value={currentProduct.applications?.join(", ") || ""} 
                   onChange={(e) => setCurrentProduct({...currentProduct, applications: e.target.value.split(",").map(t => t.trim()).filter(Boolean)})}
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Утепление</Label>
+                  <Input 
+                    value={currentProduct.specs_insulation || ""} 
+                    onChange={(e) => setCurrentProduct({...currentProduct, specs_insulation: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>Снеговая нагрузка</Label>
+                  <Input 
+                    value={currentProduct.specs_snow_load || ""} 
+                    onChange={(e) => setCurrentProduct({...currentProduct, specs_snow_load: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Огнестойкость</Label>
+                <Input 
+                  value={currentProduct.specs_fire_resistance || ""} 
+                  onChange={(e) => setCurrentProduct({...currentProduct, specs_fire_resistance: e.target.value})}
+                />
+              </div>
+              <div className="space-y-3 rounded-lg border border-border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label>Контентные секции</Label>
+                    <p className="text-sm text-muted-foreground">Большие смысловые блоки страницы продукции</p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={addSection}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добавить секцию
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {(currentProduct.content_sections || []).map((section, index) => (
+                    <div key={`${section.title}-${index}`} className="space-y-3 rounded-lg border border-border p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Grip className="h-4 w-4" />
+                          Секция {index + 1}
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeSection(index)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div>
+                        <Label>Заголовок секции</Label>
+                        <Input
+                          value={section.title}
+                          onChange={(e) => updateSection(index, "title", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Основной текст</Label>
+                        <Textarea
+                          rows={5}
+                          value={section.body}
+                          onChange={(e) => updateSection(index, "body", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Пункты списка (каждый с новой строки)</Label>
+                        <Textarea
+                          rows={4}
+                          value={section.items.join("\n")}
+                          onChange={(e) => updateSection(index, "items", e.target.value.split("\n").map((item) => item.trim()).filter(Boolean))}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div>
                 <Label>Галерея</Label>
