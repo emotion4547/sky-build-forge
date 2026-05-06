@@ -607,6 +607,36 @@ export const AdminProducts = () => {
     });
   };
 
+  const runAutoFill = async () => {
+    const productIds = (aiScope === "filtered" ? filteredProducts : products).map((p) => p.id);
+    if (productIds.length === 0) {
+      toast({ title: "Нет товаров для заполнения", variant: "destructive" });
+      return;
+    }
+    setAiRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-fill-products", {
+        body: { productIds, mode: aiMode },
+      });
+      if (error) throw error;
+      const summary = data as { ok: number; skipped: number; errors: number; total: number };
+      toast({
+        title: "Автозаполнение завершено",
+        description: `Заполнено: ${summary.ok}, пропущено: ${summary.skipped}, ошибок: ${summary.errors} из ${summary.total}`,
+      });
+      setAiDialogOpen(false);
+      await fetchCatalog();
+    } catch (e: any) {
+      toast({
+        title: "Ошибка автозаполнения",
+        description: e?.message || "Попробуйте позже",
+        variant: "destructive",
+      });
+    } finally {
+      setAiRunning(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
