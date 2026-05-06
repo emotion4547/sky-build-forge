@@ -9,12 +9,9 @@ const corsHeaders = {
 };
 
 const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const isEmpty = (v: any) => {
   if (v === null || v === undefined) return true;
@@ -22,35 +19,6 @@ const isEmpty = (v: any) => {
   if (Array.isArray(v)) return v.length === 0;
   return false;
 };
-
-async function searchPerplexity(query: string): Promise<string> {
-  if (!PERPLEXITY_API_KEY) throw new Error("PERPLEXITY_API_KEY не настроен");
-  const resp = await fetch("https://api.perplexity.ai/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "sonar-pro",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Ты эксперт по строительству быстровозводимых зданий из ЛСТК и металлоконструкций в России. Отвечай кратко, фактами, со ссылками на нормативы (СП, ГОСТ, 123-ФЗ).",
-        },
-        { role: "user", content: query },
-      ],
-      max_tokens: 1500,
-    }),
-  });
-  if (!resp.ok) {
-    const t = await resp.text();
-    throw new Error(`Perplexity ${resp.status}: ${t.slice(0, 200)}`);
-  }
-  const data = await resp.json();
-  return data.choices?.[0]?.message?.content ?? "";
-}
 
 const fillSchema = {
   type: "object",
