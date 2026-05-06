@@ -212,6 +212,7 @@ export const AdminProducts = () => {
   const [aiMode, setAiMode] = useState<"empty-only" | "all">("empty-only");
   const [aiScope, setAiScope] = useState<"filtered" | "all">("filtered");
   const [aiRunning, setAiRunning] = useState(false);
+  const [aiProgress, setAiProgress] = useState<{ done: number; total: number } | null>(null);
 
   useEffect(() => {
     fetchCatalog();
