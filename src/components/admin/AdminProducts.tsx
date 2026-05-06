@@ -909,7 +909,7 @@ export const AdminProducts = () => {
                       <p className="text-sm leading-6 text-muted-foreground">{product.excerpt}</p>
                       <div className="flex flex-wrap gap-3 text-sm">
                         <span className="font-medium text-primary">
-                          от {formatPrice(product.price_from)} до {formatPrice(product.price_to)} ₽/м²
+                          от {formatPrice(product.price_from)} ₽/м²
                         </span>
                         <span className="text-muted-foreground">Сортировка: {product.sort_order}</span>
                       </div>
