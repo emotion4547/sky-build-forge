@@ -196,102 +196,69 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { productIds, mode = "empty-only" } = await req.json();
-    if (!Array.isArray(productIds) || productIds.length === 0) {
-      return new Response(JSON.stringify({ error: "productIds обязателен" }), {
+    const body = await req.json();
+    const { productId, mode = "empty-only" } = body;
+    if (!productId || typeof productId !== "string") {
+      return new Response(JSON.stringify({ error: "productId обязателен" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { data: products, error: prodErr } = await admin
+    const { data: product, error: prodErr } = await admin
       .from("products")
       .select("*, section:section_id(title), subcategory:subcategory_id(title)")
-      .in("id", productIds);
+      .eq("id", productId)
+      .maybeSingle();
     if (prodErr) throw prodErr;
-
-    const results: any[] = [];
-
-    for (const product of products || []) {
-      try {
-        const sectionTitle = (product as any).section?.title || "";
-        const subcategoryTitle = (product as any).subcategory?.title || "";
-
-        const query = `Технические характеристики и типичные параметры для «${product.title}» (раздел: ${sectionTitle}, подкатегория: ${subcategoryTitle}) — быстровозводимые здания на ЛСТК/металлокаркасе в РФ. Дай: типовые пролёты (м), высоты (м), варианты утепления (ППУ, минвата, сэндвич — толщины), снеговые районы по СП 20.13330, степени огнестойкости по 123-ФЗ, типичные сферы применения, ключевые преимущества. Только диапазоны и факты.`;
-
-        const research = await searchPerplexity(query);
-        await sleep(500);
-        const filled = await structureWithAI(product.title, sectionTitle, subcategoryTitle, research);
-
-        const update: Record<string, any> = {};
-        const overwrite = mode === "all";
-        const setIfNeeded = (field: string, value: any, currentEmpty: boolean) => {
-          if (overwrite || currentEmpty) {
-            update[field] = value;
-          }
-        };
-
-        setIfNeeded("overview", filled.overview, isEmpty(product.overview));
-        setIfNeeded("specs_spans", filled.specs_spans, isEmpty(product.specs_spans));
-        setIfNeeded("specs_heights", filled.specs_heights, isEmpty(product.specs_heights));
-        setIfNeeded("specs_insulation", filled.specs_insulation, isEmpty(product.specs_insulation));
-        setIfNeeded("specs_snow_load", filled.specs_snow_load, isEmpty(product.specs_snow_load));
-        setIfNeeded(
-          "specs_fire_resistance",
-          filled.specs_fire_resistance,
-          isEmpty(product.specs_fire_resistance),
-        );
-        setIfNeeded("usp", filled.usp, isEmpty(product.usp));
-        setIfNeeded("applications", filled.applications, isEmpty(product.applications));
-        setIfNeeded("hero_metrics", filled.hero_metrics, isEmpty(product.hero_metrics));
-        setIfNeeded("content_sections", filled.content_sections, isEmpty(product.content_sections));
-        setIfNeeded(
-          "catalog_card_title",
-          filled.catalog_card_title,
-          isEmpty(product.catalog_card_title),
-        );
-        setIfNeeded(
-          "catalog_card_description",
-          filled.catalog_card_description,
-          isEmpty(product.catalog_card_description),
-        );
-
-        const filledFields = Object.keys(update);
-        if (filledFields.length === 0) {
-          results.push({ productId: product.id, status: "skipped", filledFields: [] });
-        } else {
-          const { error: updErr } = await admin
-            .from("products")
-            .update(update)
-            .eq("id", product.id);
-          if (updErr) throw updErr;
-          results.push({ productId: product.id, status: "ok", filledFields });
-        }
-      } catch (e: any) {
-        const msg = e?.message || String(e);
-        console.error(`Ошибка по товару ${product.id}:`, msg);
-        results.push({ productId: product.id, status: "error", error: msg });
-        if (msg === "RATE_LIMIT" || msg === "PAYMENT_REQUIRED") {
-          // прерываем массовый запуск — толку продолжать нет
-          break;
-        }
-      }
-
-      await sleep(1000);
+    if (!product) {
+      return new Response(JSON.stringify({ error: "Товар не найден" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const summary = {
-      total: products?.length || 0,
-      ok: results.filter((r) => r.status === "ok").length,
-      skipped: results.filter((r) => r.status === "skipped").length,
-      errors: results.filter((r) => r.status === "error").length,
-      results,
+    const sectionTitle = (product as any).section?.title || "";
+    const subcategoryTitle = (product as any).subcategory?.title || "";
+
+    const query = `Технические характеристики и типичные параметры для «${product.title}» (раздел: ${sectionTitle}, подкатегория: ${subcategoryTitle}) — быстровозводимые здания на ЛСТК/металлокаркасе в РФ. Дай: типовые пролёты (м), высоты (м), варианты утепления (ППУ, минвата, сэндвич — толщины), снеговые районы по СП 20.13330, степени огнестойкости по 123-ФЗ, типичные сферы применения, ключевые преимущества. Только диапазоны и факты.`;
+
+    const research = await searchPerplexity(query);
+    const filled = await structureWithAI(product.title, sectionTitle, subcategoryTitle, research);
+
+    const update: Record<string, any> = {};
+    const overwrite = mode === "all";
+    const setIfNeeded = (field: string, value: any, currentEmpty: boolean) => {
+      if (overwrite || currentEmpty) update[field] = value;
     };
 
-    return new Response(JSON.stringify(summary), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    setIfNeeded("overview", filled.overview, isEmpty(product.overview));
+    setIfNeeded("specs_spans", filled.specs_spans, isEmpty(product.specs_spans));
+    setIfNeeded("specs_heights", filled.specs_heights, isEmpty(product.specs_heights));
+    setIfNeeded("specs_insulation", filled.specs_insulation, isEmpty(product.specs_insulation));
+    setIfNeeded("specs_snow_load", filled.specs_snow_load, isEmpty(product.specs_snow_load));
+    setIfNeeded("specs_fire_resistance", filled.specs_fire_resistance, isEmpty(product.specs_fire_resistance));
+    setIfNeeded("usp", filled.usp, isEmpty(product.usp));
+    setIfNeeded("applications", filled.applications, isEmpty(product.applications));
+    setIfNeeded("hero_metrics", filled.hero_metrics, isEmpty(product.hero_metrics));
+    setIfNeeded("content_sections", filled.content_sections, isEmpty(product.content_sections));
+    setIfNeeded("catalog_card_title", filled.catalog_card_title, isEmpty(product.catalog_card_title));
+    setIfNeeded("catalog_card_description", filled.catalog_card_description, isEmpty(product.catalog_card_description));
+
+    const filledFields = Object.keys(update);
+    if (filledFields.length > 0) {
+      const { error: updErr } = await admin.from("products").update(update).eq("id", productId);
+      if (updErr) throw updErr;
+    }
+
+    return new Response(
+      JSON.stringify({
+        productId,
+        status: filledFields.length === 0 ? "skipped" : "ok",
+        filledFields,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e: any) {
     console.error("auto-fill-products fatal:", e);
     return new Response(
