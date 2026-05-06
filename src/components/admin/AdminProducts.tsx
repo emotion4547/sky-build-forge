@@ -15,7 +15,10 @@ import {
   X,
   FolderTree,
   LayoutGrid,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ImageUpload } from "./ImageUpload";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
