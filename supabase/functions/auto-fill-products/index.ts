@@ -184,10 +184,7 @@ Deno.serve(async (req) => {
     const sectionTitle = (product as any).section?.title || "";
     const subcategoryTitle = (product as any).subcategory?.title || "";
 
-    const query = `Технические характеристики и типичные параметры для «${product.title}» (раздел: ${sectionTitle}, подкатегория: ${subcategoryTitle}) — быстровозводимые здания на ЛСТК/металлокаркасе в РФ. Дай: типовые пролёты (м), высоты (м), варианты утепления (ППУ, минвата, сэндвич — толщины), снеговые районы по СП 20.13330, степени огнестойкости по 123-ФЗ, типичные сферы применения, ключевые преимущества. Только диапазоны и факты.`;
-
-    const research = await searchPerplexity(query);
-    const filled = await structureWithAI(product.title, sectionTitle, subcategoryTitle, research);
+    const filled = await fillWithPerplexity(product.title, sectionTitle, subcategoryTitle);
 
     const update: Record<string, any> = {};
     const overwrite = mode === "all";
@@ -224,9 +221,11 @@ Deno.serve(async (req) => {
     );
   } catch (e: any) {
     console.error("auto-fill-products fatal:", e);
+    const message = e?.message || "Внутренняя ошибка";
+    const status = message.includes("Лимит запросов") ? 429 : 500;
     return new Response(
-      JSON.stringify({ error: e?.message || "Внутренняя ошибка" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({ error: message }),
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
