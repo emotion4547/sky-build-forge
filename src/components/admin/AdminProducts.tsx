@@ -208,6 +208,10 @@ export const AdminProducts = () => {
   const [currentSubcategory, setCurrentSubcategory] = useState<SubcategoryForm | null>(null);
   const [currentProduct, setCurrentProduct] = useState<ProductForm | null>(null);
   const [deleteState, setDeleteState] = useState<DeleteState>(null);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiMode, setAiMode] = useState<"empty-only" | "all">("empty-only");
+  const [aiScope, setAiScope] = useState<"filtered" | "all">("filtered");
+  const [aiRunning, setAiRunning] = useState(false);
 
   useEffect(() => {
     fetchCatalog();
