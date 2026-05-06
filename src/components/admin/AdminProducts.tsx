@@ -1206,14 +1206,6 @@ export const AdminProducts = () => {
                   />
                 </div>
                 <div>
-                  <Label>Цена до (₽/м²)</Label>
-                  <Input
-                    type="number"
-                    value={currentProduct.price_to}
-                    onChange={(event) => setCurrentProduct({ ...currentProduct, price_to: Number(event.target.value) })}
-                  />
-                </div>
-                <div>
                   <Label>Пролёты</Label>
                   <Input value={currentProduct.specs_spans || ""} onChange={(event) => setCurrentProduct({ ...currentProduct, specs_spans: event.target.value })} />
                 </div>
