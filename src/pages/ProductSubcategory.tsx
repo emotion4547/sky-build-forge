@@ -211,8 +211,7 @@ const ProductSubcategory = () => {
                           {product.catalog_card_description || product.excerpt}
                         </p>
                       </div>
-                      <div className="flex items-center justify-between gap-4">
-                        <span className="text-sm font-semibold text-primary">от {formatPrice(product.price_from)} ₽/м²</span>
+                      <div className="flex items-center justify-end gap-4">
                         <span className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-primary transition-colors">
                           Подробнее
                           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
