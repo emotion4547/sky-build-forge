@@ -667,10 +667,16 @@ export const AdminProducts = () => {
             </Button>
           )}
           {activeTab === "products" && (
-            <Button onClick={openCreateProduct}>
-              <Plus className="mr-2 h-4 w-4" />
-              Добавить товар
-            </Button>
+            <>
+              <Button variant="outline" onClick={() => setAiDialogOpen(true)}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Автозаполнить ИИ
+              </Button>
+              <Button onClick={openCreateProduct}>
+                <Plus className="mr-2 h-4 w-4" />
+                Добавить товар
+              </Button>
+            </>
           )}
         </div>
       </div>
