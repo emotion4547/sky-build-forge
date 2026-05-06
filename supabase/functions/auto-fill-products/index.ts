@@ -146,8 +146,8 @@ async function structureWithAI(
     }),
   });
 
-  if (resp.status === 429) throw new Error("RATE_LIMIT");
-  if (resp.status === 402) throw new Error("PAYMENT_REQUIRED");
+  if (resp.status === 429) throw new Error("Лимит запросов к ИИ — попробуйте позже");
+  if (resp.status === 402) throw new Error("Закончились кредиты Lovable AI — пополните баланс в Settings → Workspace");
   if (!resp.ok) {
     const t = await resp.text();
     throw new Error(`AI gateway ${resp.status}: ${t.slice(0, 200)}`);
