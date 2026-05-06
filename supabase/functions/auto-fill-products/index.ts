@@ -127,7 +127,7 @@ async function structureWithAI(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-pro",
+      model: "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: sys },
         { role: "user", content: user },
@@ -146,8 +146,8 @@ async function structureWithAI(
     }),
   });
 
-  if (resp.status === 429) throw new Error("RATE_LIMIT");
-  if (resp.status === 402) throw new Error("PAYMENT_REQUIRED");
+  if (resp.status === 429) throw new Error("Лимит запросов к ИИ — попробуйте позже");
+  if (resp.status === 402) throw new Error("Закончились кредиты Lovable AI — пополните баланс в Settings → Workspace");
   if (!resp.ok) {
     const t = await resp.text();
     throw new Error(`AI gateway ${resp.status}: ${t.slice(0, 200)}`);
