@@ -76,54 +76,49 @@ const fillSchema = {
   additionalProperties: false,
 };
 
-async function structureWithAI(
+async function fillWithPerplexity(
   productTitle: string,
   sectionTitle: string,
   subcategoryTitle: string,
-  research: string,
 ): Promise<any> {
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY не настроен");
+  if (!PERPLEXITY_API_KEY) throw new Error("PERPLEXITY_API_KEY не настроен");
   const sys =
-    "Ты копирайтер для сайта производителя быстровозводимых зданий. Пишешь профессионально, на русском языке, без воды. Используй данные из исследования. USP — 4–6 кратких пунктов. Applications — 4–8 пунктов. hero_metrics — 3–4 показателя. content_sections — 2–4 смысловых блока (Конструкция, Преимущества, Этапы, Гарантии и т.п.) с body 2–4 предложения и items 3–5 пунктов. catalog_card_title — короткий (до 50 симв), catalog_card_description — до 140 символов. overview — 2 абзаца, ~150 слов.";
+    "Ты эксперт и копирайтер для сайта производителя быстровозводимых зданий из ЛСТК и металлоконструкций в России. Пиши профессионально, на русском языке, без воды. Используй отраслевые факты, типовые диапазоны и ссылки на нормы (СП, ГОСТ, 123-ФЗ), если они релевантны. USP — 4–6 кратких пунктов. Applications — 4–8 пунктов. hero_metrics — 3–4 показателя. content_sections — 2–4 смысловых блока (Конструкция, Преимущества, Этапы, Гарантии и т.п.) с body 2–4 предложения и items 3–5 пунктов. catalog_card_title — короткий (до 50 симв), catalog_card_description — до 140 символов. overview — 2 абзаца, ~150 слов.";
 
-  const user = `Товар: «${productTitle}»\nРаздел каталога: ${sectionTitle}\nПодкатегория: ${subcategoryTitle}\n\nРезультат веб-исследования:\n${research}\n\nНа основе данных выше заполни все поля карточки товара на русском языке. Если по полю нет точных данных — дай типовые отраслевые диапазоны. Все значения в SI, цифры с единицами измерения.`;
+  const user = `Товар: «${productTitle}»\nРаздел каталога: ${sectionTitle}\nПодкатегория: ${subcategoryTitle}\n\nЗаполни все поля карточки товара на русском языке. Если по полю нет точных данных — дай типовые отраслевые диапазоны. Все значения в SI, цифры с единицами измерения.`;
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const resp = await fetch("https://api.perplexity.ai/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "sonar-pro",
       messages: [
         { role: "system", content: sys },
         { role: "user", content: user },
       ],
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "fill_product_card",
-            description: "Заполнить карточку товара структурированными данными",
-            parameters: fillSchema,
-          },
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "fill_product_card",
+          schema: fillSchema,
         },
-      ],
-      tool_choice: { type: "function", function: { name: "fill_product_card" } },
+      },
+      max_tokens: 3500,
     }),
   });
 
-  if (resp.status === 429) throw new Error("Лимит запросов к ИИ — попробуйте позже");
-  if (resp.status === 402) throw new Error("Закончились кредиты Lovable AI — пополните баланс в Settings → Workspace");
+  if (resp.status === 429) throw new Error("Лимит запросов к автозаполнению — попробуйте позже");
   if (!resp.ok) {
     const t = await resp.text();
-    throw new Error(`AI gateway ${resp.status}: ${t.slice(0, 200)}`);
+    throw new Error(`Perplexity ${resp.status}: ${t.slice(0, 200)}`);
   }
   const data = await resp.json();
-  const call = data.choices?.[0]?.message?.tool_calls?.[0];
-  if (!call?.function?.arguments) throw new Error("Нет ответа от модели");
-  return JSON.parse(call.function.arguments);
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error("Нет ответа от автозаполнения");
+  return typeof content === "string" ? JSON.parse(content) : content;
 }
 
 Deno.serve(async (req) => {
