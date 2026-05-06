@@ -1344,6 +1344,77 @@ export const AdminProducts = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={aiDialogOpen} onOpenChange={(open) => !aiRunning && setAiDialogOpen(open)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Автозаполнение карточек ИИ</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 py-2">
+            <p className="text-sm text-muted-foreground">
+              ИИ соберёт данные через веб-поиск и заполнит описание, технические характеристики, USP, применение, метрики и текст карточки каталога. Поля slug, название, цены, изображения и публикация не изменяются. Процесс может занять несколько минут.
+            </p>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Что заполнять</Label>
+              <RadioGroup value={aiMode} onValueChange={(v) => setAiMode(v as "empty-only" | "all")}>
+                <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                  <RadioGroupItem value="empty-only" id="ai-mode-empty" className="mt-1" />
+                  <Label htmlFor="ai-mode-empty" className="cursor-pointer font-normal">
+                    Только пустые поля
+                    <span className="block text-xs text-muted-foreground">Безопасный режим — существующие тексты сохраняются.</span>
+                  </Label>
+                </div>
+                <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                  <RadioGroupItem value="all" id="ai-mode-all" className="mt-1" />
+                  <Label htmlFor="ai-mode-all" className="cursor-pointer font-normal">
+                    Перезаписать все
+                    <span className="block text-xs text-muted-foreground">Заменит уже заполненные поля сгенерированными значениями.</span>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Какие товары</Label>
+              <RadioGroup value={aiScope} onValueChange={(v) => setAiScope(v as "filtered" | "all")}>
+                <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                  <RadioGroupItem value="filtered" id="ai-scope-filtered" className="mt-1" />
+                  <Label htmlFor="ai-scope-filtered" className="cursor-pointer font-normal">
+                    Текущая выборка ({filteredProducts.length})
+                    <span className="block text-xs text-muted-foreground">Учитываются активные фильтры и поиск.</span>
+                  </Label>
+                </div>
+                <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                  <RadioGroupItem value="all" id="ai-scope-all" className="mt-1" />
+                  <Label htmlFor="ai-scope-all" className="cursor-pointer font-normal">
+                    Все товары ({products.length})
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setAiDialogOpen(false)} disabled={aiRunning}>
+                Отмена
+              </Button>
+              <Button onClick={runAutoFill} disabled={aiRunning}>
+                {aiRunning ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Идёт заполнение...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Запустить
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
