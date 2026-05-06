@@ -180,7 +180,7 @@ const ProductDetail = () => {
               <h1 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-4">{product.title}</h1>
               <p className="text-lg text-muted-foreground mb-6">{product.excerpt}</p>
               <p className="text-2xl font-bold text-primary mb-6">
-                {product.price_from.toLocaleString("ru-RU")} – {product.price_to.toLocaleString("ru-RU")} ₽/м²
+                от {product.price_from.toLocaleString("ru-RU")} ₽/м²
               </p>
               {product.hero_metrics.length > 0 && (
                 <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-3">
