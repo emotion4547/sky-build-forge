@@ -615,15 +615,31 @@ export const AdminProducts = () => {
       return;
     }
     setAiRunning(true);
+    setAiProgress({ done: 0, total: productIds.length });
+    let ok = 0;
+    let skipped = 0;
+    let errors = 0;
     try {
-      const { data, error } = await supabase.functions.invoke("auto-fill-products", {
-        body: { productIds, mode: aiMode },
-      });
-      if (error) throw error;
-      const summary = data as { ok: number; skipped: number; errors: number; total: number };
+      for (let i = 0; i < productIds.length; i++) {
+        const productId = productIds[i];
+        try {
+          const { data, error } = await supabase.functions.invoke("auto-fill-products", {
+            body: { productId, mode: aiMode },
+          });
+          if (error) throw error;
+          const status = (data as { status?: string })?.status;
+          if (status === "ok") ok++;
+          else if (status === "skipped") skipped++;
+          else errors++;
+        } catch (e) {
+          errors++;
+          console.error("auto-fill error", productId, e);
+        }
+        setAiProgress({ done: i + 1, total: productIds.length });
+      }
       toast({
         title: "Автозаполнение завершено",
-        description: `Заполнено: ${summary.ok}, пропущено: ${summary.skipped}, ошибок: ${summary.errors} из ${summary.total}`,
+        description: `Заполнено: ${ok}, пропущено: ${skipped}, ошибок: ${errors} из ${productIds.length}`,
       });
       setAiDialogOpen(false);
       await fetchCatalog();
@@ -635,6 +651,7 @@ export const AdminProducts = () => {
       });
     } finally {
       setAiRunning(false);
+      setAiProgress(null);
     }
   };
 
