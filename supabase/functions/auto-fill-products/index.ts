@@ -20,6 +20,16 @@ const isEmpty = (v: any) => {
   return false;
 };
 
+const parseJsonContent = (content: unknown) => {
+  if (typeof content !== "string") return content;
+  try {
+    return JSON.parse(content);
+  } catch (error) {
+    console.error("Perplexity returned invalid JSON:", error, content.slice(0, 500));
+    throw new Error("Сервис автозаполнения вернул неполный JSON — повторите запрос");
+  }
+};
+
 const fillSchema = {
   type: "object",
   properties: {
@@ -82,10 +92,12 @@ async function fillWithPerplexity(
   productTitle: string,
   sectionTitle: string,
   subcategoryTitle: string,
+  compact = false,
 ): Promise<any> {
   if (!PERPLEXITY_API_KEY) throw new Error("PERPLEXITY_API_KEY не настроен");
-  const sys =
-    "Ты эксперт и копирайтер для сайта производителя быстровозводимых зданий из ЛСТК и металлоконструкций в России. Пиши профессионально, на русском языке, без воды. Используй отраслевые факты, типовые диапазоны и ссылки на нормы (СП, ГОСТ, 123-ФЗ), если они релевантны. USP — 4–6 кратких пунктов. Applications — 4–8 пунктов. hero_metrics — 3–4 показателя. content_sections — 2–4 смысловых блока (Конструкция, Преимущества, Этапы, Гарантии и т.п.) с body 2–4 предложения и items 3–5 пунктов. catalog_card_title — короткий (до 50 симв), catalog_card_description — до 140 символов. overview — 2 абзаца, ~150 слов.";
+  const sys = compact
+    ? "Ты эксперт по быстровозводимым зданиям из ЛСТК. Верни только валидный компактный JSON по схеме, без Markdown и пояснений. Все тексты на русском. Коротко: overview до 90 слов, content_sections максимум 2 блока, body до 2 предложений, списки лаконичные."
+    : "Ты эксперт и копирайтер для сайта производителя быстровозводимых зданий из ЛСТК и металлоконструкций в России. Верни только валидный JSON по схеме, без Markdown и пояснений. Пиши профессионально, на русском языке, без воды. Используй отраслевые факты, типовые диапазоны и ссылки на нормы (СП, ГОСТ, 123-ФЗ), если они релевантны. USP — 4–6 кратких пунктов. Applications — 4–8 пунктов. hero_metrics — 3–4 показателя. content_sections — 2–3 смысловых блока с body 1–3 предложения и items 3–4 пункта. catalog_card_title — до 50 симв, catalog_card_description — до 140 символов. overview — до 120 слов.";
 
   const user = `Товар: «${productTitle}»\nРаздел каталога: ${sectionTitle}\nПодкатегория: ${subcategoryTitle}\n\nЗаполни все поля карточки товара на русском языке. Если по полю нет точных данных — дай типовые отраслевые диапазоны. Все значения в SI, цифры с единицами измерения.`;
 
@@ -108,7 +120,8 @@ async function fillWithPerplexity(
           schema: fillSchema,
         },
       },
-      max_tokens: 3500,
+      max_tokens: compact ? 2800 : 5000,
+      temperature: 0.2,
     }),
   });
 
@@ -120,7 +133,7 @@ async function fillWithPerplexity(
   const data = await resp.json();
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error("Нет ответа от автозаполнения");
-  return typeof content === "string" ? JSON.parse(content) : content;
+  return parseJsonContent(content);
 }
 
 Deno.serve(async (req) => {
