@@ -199,7 +199,13 @@ Deno.serve(async (req) => {
     const sectionTitle = (product as any).section?.title || "";
     const subcategoryTitle = (product as any).subcategory?.title || "";
 
-    const filled = await fillWithPerplexity(product.title, sectionTitle, subcategoryTitle);
+    let filled: any;
+    try {
+      filled = await fillWithPerplexity(product.title, sectionTitle, subcategoryTitle);
+    } catch (e: any) {
+      if (!String(e?.message || "").includes("неполный JSON")) throw e;
+      filled = await fillWithPerplexity(product.title, sectionTitle, subcategoryTitle, true);
+    }
 
     const update: Record<string, any> = {};
     const overwrite = mode === "all";
@@ -237,7 +243,11 @@ Deno.serve(async (req) => {
   } catch (e: any) {
     console.error("auto-fill-products fatal:", e);
     const message = e?.message || "Внутренняя ошибка";
-    const status = message.includes("Лимит запросов") ? 429 : 500;
+    const status = message.includes("Лимит запросов")
+      ? 429
+      : message.includes("неполный JSON")
+        ? 502
+        : 500;
     return new Response(
       JSON.stringify({ error: message }),
       { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
