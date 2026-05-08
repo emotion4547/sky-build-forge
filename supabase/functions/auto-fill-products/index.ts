@@ -23,21 +23,22 @@ const isEmpty = (v: any) => {
 const fillSchema = {
   type: "object",
   properties: {
-    overview: { type: "string" },
-    specs_spans: { type: "string" },
-    specs_heights: { type: "string" },
-    specs_insulation: { type: "string" },
-    specs_snow_load: { type: "string" },
-    specs_fire_resistance: { type: "string" },
-    usp: { type: "array", items: { type: "string" } },
-    applications: { type: "array", items: { type: "string" } },
+    overview: { type: "string", maxLength: 900 },
+    specs_spans: { type: "string", maxLength: 180 },
+    specs_heights: { type: "string", maxLength: 180 },
+    specs_insulation: { type: "string", maxLength: 180 },
+    specs_snow_load: { type: "string", maxLength: 180 },
+    specs_fire_resistance: { type: "string", maxLength: 180 },
+    usp: { type: "array", maxItems: 6, items: { type: "string", maxLength: 140 } },
+    applications: { type: "array", maxItems: 8, items: { type: "string", maxLength: 100 } },
     hero_metrics: {
       type: "array",
+      maxItems: 4,
       items: {
         type: "object",
         properties: {
-          label: { type: "string" },
-          value: { type: "string" },
+          label: { type: "string", maxLength: 32 },
+          value: { type: "string", maxLength: 48 },
         },
         required: ["label", "value"],
         additionalProperties: false,
@@ -45,19 +46,20 @@ const fillSchema = {
     },
     content_sections: {
       type: "array",
+      maxItems: 3,
       items: {
         type: "object",
         properties: {
-          title: { type: "string" },
-          body: { type: "string" },
-          items: { type: "array", items: { type: "string" } },
+          title: { type: "string", maxLength: 45 },
+          body: { type: "string", maxLength: 420 },
+          items: { type: "array", maxItems: 4, items: { type: "string", maxLength: 120 } },
         },
         required: ["title", "body", "items"],
         additionalProperties: false,
       },
     },
-    catalog_card_title: { type: "string" },
-    catalog_card_description: { type: "string" },
+    catalog_card_title: { type: "string", maxLength: 50 },
+    catalog_card_description: { type: "string", maxLength: 140 },
   },
   required: [
     "overview",
