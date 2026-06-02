@@ -1,0 +1,1 @@
+UPDATE public.site_settings SET value = jsonb_set(value, '{phone}', '"+7 (932) 536-91-29"') WHERE key IN ('hero','cta');
