@@ -18,7 +18,7 @@ const defaultHero: HeroSettings = {
   titleAccent: "здания",
   description: "Проектирование и строительство складов, цехов, ангаров. Собственное производство металлоконструкций.",
   highlights: ["От 6 недель", "Гарантия 5 лет", "Под ключ"],
-  phone: "+7 (800) 555-35-35",
+  phone: "+7 (932) 536-91-29",
 };
 
 export function HeroSection() {
@@ -78,9 +78,11 @@ export function HeroSection() {
               <Calculator className="h-5 w-5" />
               Рассчитать проект
             </Button>
-            <Button variant="heroOutline" size="xl">
-              <Phone className="h-5 w-5" />
-              {hero.phone}
+            <Button variant="heroOutline" size="xl" asChild>
+              <a href={`tel:${hero.phone.replace(/\D/g, "")}`}>
+                <Phone className="h-5 w-5" />
+                {hero.phone}
+              </a>
             </Button>
           </div>
         </div>

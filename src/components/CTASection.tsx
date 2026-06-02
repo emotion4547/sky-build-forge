@@ -13,7 +13,7 @@ const defaultCTA: CTASettings = {
   title: "Готовы обсудить",
   titleAccent: "ваш проект?",
   description: "Получите бесплатную консультацию и предварительный расчёт стоимости вашего объекта уже сегодня",
-  phone: "+7 (800) 555-35-35",
+  phone: "+7 (932) 536-91-29",
 };
 
 export function CTASection() {
@@ -52,13 +52,16 @@ export function CTASection() {
               Рассчитать стоимость
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="xl"
+              asChild
               className="border-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary"
             >
-              <Phone className="h-5 w-5" />
-              {cta.phone}
+              <a href={`tel:${cta.phone.replace(/\D/g, "")}`}>
+                <Phone className="h-5 w-5" />
+                {cta.phone}
+              </a>
             </Button>
           </div>
         </div>

@@ -65,40 +65,59 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
     setIsLoading(true);
 
     try {
-      const searchTerm = `%${searchQuery.toLowerCase()}%`;
+      // Разбиваем запрос на слова — ищем подстроку любого из слов в любом из полей
+      const tokens = searchQuery
+        .toLowerCase()
+        .split(/\s+/)
+        .map((t) => t.replace(/[%,()*]/g, "").trim())
+        .filter((t) => t.length >= 2);
+
+      if (tokens.length === 0) {
+        setResults([]);
+        setIsLoading(false);
+        return;
+      }
+
+      const buildOr = (fields: string[]) =>
+        fields
+          .flatMap((field) => tokens.map((token) => `${field}.ilike.%${token}%`))
+          .join(",");
+
 
       const [sectionsResponse, subcategoriesResponse, productsResponse, projectsResponse, articlesResponse] = await Promise.all([
         supabase
           .from("catalog_sections" as any)
           .select("id, title, slug, description")
-          .or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`)
+          .or(buildOr(["title", "description"]))
           .eq("is_published", true)
           .limit(4),
         supabase
           .from("catalog_subcategories" as any)
           .select("id, title, slug, description, section_id")
-          .or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`)
+          .or(buildOr(["title", "description"]))
           .eq("is_published", true)
           .limit(6),
         supabase
           .from("products")
           .select("id, title, slug, excerpt, section_id, subcategory_id")
-          .or(`title.ilike.${searchTerm},excerpt.ilike.${searchTerm},catalog_card_title.ilike.${searchTerm},catalog_card_description.ilike.${searchTerm}`)
+          .or(buildOr(["title", "excerpt", "catalog_card_title", "catalog_card_description"]))
           .eq("is_published", true)
           .limit(6),
         supabase
           .from("projects")
           .select("id, title, slug, region")
-          .or(`title.ilike.${searchTerm},region.ilike.${searchTerm},product_type.ilike.${searchTerm}`)
+          .or(buildOr(["title", "region", "product_type"]))
           .eq("is_published", true)
           .limit(5),
         supabase
           .from("articles")
           .select("id, title, slug, lead")
-          .or(`title.ilike.${searchTerm},lead.ilike.${searchTerm}`)
+          .or(buildOr(["title", "lead"]))
           .eq("is_published", true)
           .limit(5),
       ]);
+
+
 
       const sectionMap = new Map<string, string>();
       (sectionsResponse.data || []).forEach((section: any) => sectionMap.set(section.id, section.slug));
@@ -218,7 +237,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="overflow-hidden p-0 shadow-lg sm:max-w-[550px]">
-        <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground">
+        <Command shouldFilter={false} className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground">
           <div className="flex items-center border-b px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
             <input
