@@ -65,7 +65,24 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
     setIsLoading(true);
 
     try {
-      const searchTerm = `%${searchQuery.toLowerCase()}%`;
+      // Разбиваем запрос на слова — ищем подстроку любого из слов в любом из полей
+      const tokens = searchQuery
+        .toLowerCase()
+        .split(/\s+/)
+        .map((t) => t.replace(/[%,()*]/g, "").trim())
+        .filter((t) => t.length >= 2);
+
+      if (tokens.length === 0) {
+        setResults([]);
+        setIsLoading(false);
+        return;
+      }
+
+      const buildOr = (fields: string[]) =>
+        fields
+          .flatMap((field) => tokens.map((token) => `${field}.ilike.%${token}%`))
+          .join(",");
+
 
       const [sectionsResponse, subcategoriesResponse, productsResponse, projectsResponse, articlesResponse] = await Promise.all([
         supabase
