@@ -117,22 +117,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           .limit(5),
       ]);
 
-          .or(`title.ilike.${searchTerm},excerpt.ilike.${searchTerm},catalog_card_title.ilike.${searchTerm},catalog_card_description.ilike.${searchTerm}`)
-          .eq("is_published", true)
-          .limit(6),
-        supabase
-          .from("projects")
-          .select("id, title, slug, region")
-          .or(`title.ilike.${searchTerm},region.ilike.${searchTerm},product_type.ilike.${searchTerm}`)
-          .eq("is_published", true)
-          .limit(5),
-        supabase
-          .from("articles")
-          .select("id, title, slug, lead")
-          .or(`title.ilike.${searchTerm},lead.ilike.${searchTerm}`)
-          .eq("is_published", true)
-          .limit(5),
-      ]);
+
 
       const sectionMap = new Map<string, string>();
       (sectionsResponse.data || []).forEach((section: any) => sectionMap.set(section.id, section.slug));
