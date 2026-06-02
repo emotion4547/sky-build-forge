@@ -88,18 +88,35 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         supabase
           .from("catalog_sections" as any)
           .select("id, title, slug, description")
-          .or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`)
+          .or(buildOr(["title", "description"]))
           .eq("is_published", true)
           .limit(4),
         supabase
           .from("catalog_subcategories" as any)
           .select("id, title, slug, description, section_id")
-          .or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`)
+          .or(buildOr(["title", "description"]))
           .eq("is_published", true)
           .limit(6),
         supabase
           .from("products")
           .select("id, title, slug, excerpt, section_id, subcategory_id")
+          .or(buildOr(["title", "excerpt", "catalog_card_title", "catalog_card_description"]))
+          .eq("is_published", true)
+          .limit(6),
+        supabase
+          .from("projects")
+          .select("id, title, slug, region")
+          .or(buildOr(["title", "region", "product_type"]))
+          .eq("is_published", true)
+          .limit(5),
+        supabase
+          .from("articles")
+          .select("id, title, slug, lead")
+          .or(buildOr(["title", "lead"]))
+          .eq("is_published", true)
+          .limit(5),
+      ]);
+
           .or(`title.ilike.${searchTerm},excerpt.ilike.${searchTerm},catalog_card_title.ilike.${searchTerm},catalog_card_description.ilike.${searchTerm}`)
           .eq("is_published", true)
           .limit(6),
